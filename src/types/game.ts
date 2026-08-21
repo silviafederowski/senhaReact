@@ -40,7 +40,6 @@ export interface CurrentGame {
   guesses: GuessEntry[];
   startedAt: number;
   finishedAt?: number;
-  outcome?: 'won' | 'revealed';
 }
 
 export interface HistoryEntry {

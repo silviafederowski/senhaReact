@@ -1,3 +1,4 @@
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -5,10 +6,10 @@ interface GuessKeypadProps {
   alphabet: string[];
   disabledChars: Set<string>;
   canType: boolean;
-  canBackspace: boolean;
+  canClear: boolean;
   canSubmit: boolean;
   onPressChar: (char: string) => void;
-  onBackspace: () => void;
+  onClearAll: () => void;
   onSubmit: () => void;
 }
 
@@ -16,10 +17,10 @@ export function GuessKeypad({
   alphabet,
   disabledChars,
   canType,
-  canBackspace,
+  canClear,
   canSubmit,
   onPressChar,
-  onBackspace,
+  onClearAll,
   onSubmit,
 }: GuessKeypadProps) {
   return (
@@ -41,18 +42,20 @@ export function GuessKeypad({
       </View>
       <View style={styles.actions}>
         <TouchableOpacity
-          disabled={!canBackspace}
-          onPress={onBackspace}
-          style={[styles.actionButton, styles.backspaceButton, !canBackspace && styles.keyDisabled]}
+          disabled={!canClear}
+          onPress={onClearAll}
+          accessibilityLabel="Limpar tudo"
+          style={styles.actionButton}
         >
-          <Text style={styles.actionText}>⌫ Apagar</Text>
+          <MaterialCommunityIcons name="eraser" size={34} color={canClear ? '#1a1a1a' : '#ccc'} />
         </TouchableOpacity>
         <TouchableOpacity
           disabled={!canSubmit}
           onPress={onSubmit}
-          style={[styles.actionButton, styles.submitButton, !canSubmit && styles.keyDisabled]}
+          accessibilityLabel="Enviar tentativa"
+          style={styles.actionButton}
         >
-          <Text style={[styles.actionText, styles.submitText]}>Enviar tentativa</Text>
+          <Ionicons name="checkmark" size={38} color={canSubmit ? '#1a1a1a' : '#ccc'} />
         </TouchableOpacity>
       </View>
     </View>
@@ -94,21 +97,9 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    height: 44,
+    height: 52,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  backspaceButton: {
-    backgroundColor: '#e0e0e0',
-  },
-  submitButton: {
-    backgroundColor: '#1f8a3b',
-  },
-  actionText: {
-    fontWeight: '700',
-  },
-  submitText: {
-    color: '#fff',
   },
 });

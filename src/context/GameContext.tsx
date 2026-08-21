@@ -23,7 +23,6 @@ interface GameContextValue {
   sessionStartedAt: number;
   submitGuess: (guess: Secret) => void;
   resetGame: () => void;
-  revealPassword: () => void;
   updateConfig: (config: GameConfig) => void;
   clearHistory: () => void;
 }
@@ -85,7 +84,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const updatedGame: CurrentGame = {
       ...currentGame,
       guesses: [...currentGame.guesses, { guess, result }],
-      ...(won ? { finishedAt: Date.now(), outcome: 'won' as const } : {}),
+      ...(won ? { finishedAt: Date.now() } : {}),
     };
 
     setCurrentGame(updatedGame);
@@ -106,14 +105,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       await saveCurrentGame(game);
       setCurrentGame(game);
     })();
-  };
-
-  const revealPassword = () => {
-    if (!currentGame || currentGame.finishedAt) return;
-    const finished: CurrentGame = { ...currentGame, finishedAt: Date.now(), outcome: 'revealed' as const };
-    setCurrentGame(finished);
-    saveCurrentGame(finished);
-    addHistoryEntry(makeHistoryEntry(finished, false)).then(setHistory);
   };
 
   const updateConfig = (newConfig: GameConfig) => {
@@ -144,7 +135,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       sessionStartedAt,
       submitGuess,
       resetGame,
-      revealPassword,
       updateConfig,
       clearHistory,
     }),

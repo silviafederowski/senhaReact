@@ -1,6 +1,5 @@
-import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { getAlphabet } from '../game/alphabet';
 import { GuessKeypad } from '../components/GuessKeypad';
 import { GuessSlots } from '../components/GuessSlots';
@@ -9,16 +8,22 @@ import { SecretDisplay } from '../components/SecretDisplay';
 import { Timer } from '../components/Timer';
 import { useGame } from '../context/GameContext';
 
+function emptyDraft(length: number): string[] {
+  return Array(length).fill('');
+}
+
 export function TabuleiroScreen() {
-  const navigation = useNavigation<any>();
-  const { loading, currentGame, sessionStartedAt, submitGuess, resetGame, revealPassword } = useGame();
+  const { loading, currentGame, sessionStartedAt, submitGuess } = useGame();
   const [draftA, setDraftA] = useState<string[]>([]);
   const [draftB, setDraftB] = useState<string[]>([]);
+  const [selected, setSelected] = useState(0);
   const [secretVisible, setSecretVisible] = useState(false);
 
   useEffect(() => {
-    setDraftA([]);
-    setDraftB([]);
+    if (!currentGame) return;
+    setDraftA(emptyDraft(currentGame.config.length));
+    setDraftB(emptyDraft(currentGame.config.length));
+    setSelected(0);
     setSecretVisible(false);
   }, [currentGame?.startedAt]);
 
@@ -34,47 +39,41 @@ export function TabuleiroScreen() {
   const finished = Boolean(currentGame.finishedAt);
   const alphabet = getAlphabet(config.charset);
 
-  const activeIsRowB = config.rows === 2 && draftA.length >= config.length;
-  const activeDraft = activeIsRowB ? draftB : draftA;
-  const disabledChars = config.allowRepetition ? new Set<string>() : new Set(activeDraft);
-  const canType = !finished && activeDraft.length < config.length;
-  const canBackspace = !finished && (draftB.length > 0 || draftA.length > 0);
-  const canSubmit = !finished && draftA.length === config.length && (config.rows === 1 || draftB.length === config.length);
+  const totalSlots = config.rows === 2 ? config.length * 2 : config.length;
+  const selectedRow: 'A' | 'B' = selected < config.length ? 'A' : 'B';
+  const selectedLocal = selected < config.length ? selected : selected - config.length;
+  const selectedDraft = selectedRow === 'A' ? draftA : draftB;
+
+  const usedElsewhereInSelectedRow = new Set(
+    selectedDraft.filter((c, i) => i !== selectedLocal && c !== '')
+  );
+  const disabledChars = config.allowRepetition ? new Set<string>() : usedElsewhereInSelectedRow;
+
+  const canType = !finished;
+  const canClear = !finished && (draftA.some((c) => c !== '') || draftB.some((c) => c !== ''));
+  const canSubmit =
+    !finished && draftA.every((c) => c !== '') && (config.rows === 1 || draftB.every((c) => c !== ''));
 
   const onPressChar = (char: string) => {
-    if (activeIsRowB) {
-      setDraftB((prev) => [...prev, char]);
+    if (selectedRow === 'A') {
+      setDraftA((prev) => prev.map((c, i) => (i === selectedLocal ? char : c)));
     } else {
-      setDraftA((prev) => [...prev, char]);
+      setDraftB((prev) => prev.map((c, i) => (i === selectedLocal ? char : c)));
     }
+    setSelected((s) => Math.min(s + 1, totalSlots - 1));
   };
 
-  const onBackspace = () => {
-    if (draftB.length > 0) {
-      setDraftB((prev) => prev.slice(0, -1));
-    } else if (draftA.length > 0) {
-      setDraftA((prev) => prev.slice(0, -1));
-    }
+  const onClearAll = () => {
+    setDraftA(emptyDraft(config.length));
+    setDraftB(emptyDraft(config.length));
+    setSelected(0);
   };
 
   const onSubmit = () => {
     submitGuess({ rowA: draftA, rowB: config.rows === 2 ? draftB : undefined });
-    setDraftA([]);
-    setDraftB([]);
-  };
-
-  const onReset = () => {
-    Alert.alert('Resetar jogo', 'Tem certeza que deseja começar um novo jogo?', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Resetar', style: 'destructive', onPress: resetGame },
-    ]);
-  };
-
-  const onReveal = () => {
-    Alert.alert('Revelar senha', 'Isso encerra a tentativa atual. Deseja revelar a senha?', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Revelar', style: 'destructive', onPress: revealPassword },
-    ]);
+    setDraftA(emptyDraft(config.length));
+    setDraftB(emptyDraft(config.length));
+    setSelected(0);
   };
 
   return (
@@ -87,56 +86,46 @@ export function TabuleiroScreen() {
           onToggle={() => setSecretVisible((v) => !v)}
         />
 
-        <View style={styles.buttonBar}>
-          <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Histórico')}>
-            <Text style={styles.navButtonText}>Histórico</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Configurações')}>
-            <Text style={styles.navButtonText}>Configurações</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navButton} onPress={onReset}>
-            <Text style={styles.navButtonText}>Resetar</Text>
-          </TouchableOpacity>
-        </View>
-
         <View style={styles.timers}>
           <Timer label="Tempo desta senha" startedAt={currentGame.startedAt} endedAt={currentGame.finishedAt} />
           <Timer label="Tempo deste acesso" startedAt={sessionStartedAt} />
         </View>
 
-        {!finished && (
-          <TouchableOpacity style={styles.revealButton} onPress={onReveal}>
-            <Text style={styles.revealButtonText}>Revelar senha</Text>
-          </TouchableOpacity>
-        )}
-
         {finished && (
-          <View style={[styles.banner, currentGame.outcome === 'won' ? styles.bannerWon : styles.bannerRevealed]}>
-            <Text style={styles.bannerText}>
-              {currentGame.outcome === 'won' ? '🎉 Você acertou a senha! 🎉' : 'Senha revelada:'}
-            </Text>
+          <View style={styles.banner}>
+            <Text style={styles.bannerText}>🎉 Você acertou a senha! 🎉</Text>
             <Text style={styles.bannerSecret}>
               {currentGame.secret.rowA.join('')}
               {config.rows === 2 ? ` / ${(currentGame.secret.rowB ?? []).join('')}` : ''}
             </Text>
-            <TouchableOpacity style={styles.resetHighlight} onPress={onReset}>
-              <Text style={styles.resetHighlightText}>Começar novo jogo</Text>
-            </TouchableOpacity>
+            <Text style={styles.bannerHint}>Toque em Resetar, na barra inferior, para jogar de novo.</Text>
           </View>
         )}
 
         {!finished && (
           <View style={styles.entry}>
-            <GuessSlots length={config.length} values={draftA} rowLabel={config.rows === 2 ? 'L1' : undefined} />
-            {config.rows === 2 && <GuessSlots length={config.length} values={draftB} rowLabel="L2" />}
+            <GuessSlots
+              length={config.length}
+              values={draftA}
+              selectedIndex={selectedRow === 'A' ? selectedLocal : null}
+              onSlotPress={(i) => setSelected(i)}
+            />
+            {config.rows === 2 && (
+              <GuessSlots
+                length={config.length}
+                values={draftB}
+                selectedIndex={selectedRow === 'B' ? selectedLocal : null}
+                onSlotPress={(i) => setSelected(config.length + i)}
+              />
+            )}
             <GuessKeypad
               alphabet={alphabet}
               disabledChars={disabledChars}
               canType={canType}
-              canBackspace={canBackspace}
+              canClear={canClear}
               canSubmit={canSubmit}
               onPressChar={onPressChar}
-              onBackspace={onBackspace}
+              onClearAll={onClearAll}
               onSubmit={onSubmit}
             />
           </View>
@@ -161,50 +150,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 40,
   },
-  buttonBar: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 12,
-  },
-  navButton: {
-    flex: 1,
-    backgroundColor: '#eef1f8',
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  navButtonText: {
-    fontWeight: '600',
-    color: '#2f4a8f',
-  },
   timers: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 12,
-  },
-  revealButton: {
-    alignSelf: 'center',
-    backgroundColor: '#8a1f6b',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  revealButtonText: {
-    color: '#fff',
-    fontWeight: '700',
   },
   banner: {
     padding: 16,
     borderRadius: 10,
     alignItems: 'center',
     marginBottom: 16,
-  },
-  bannerWon: {
     backgroundColor: '#e3f8e8',
-  },
-  bannerRevealed: {
-    backgroundColor: '#f5e9f2',
   },
   bannerText: {
     fontSize: 16,
@@ -215,17 +171,11 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '800',
     letterSpacing: 2,
-    marginBottom: 10,
+    marginBottom: 8,
   },
-  resetHighlight: {
-    backgroundColor: '#1f8a3b',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  resetHighlightText: {
-    color: '#fff',
-    fontWeight: '700',
+  bannerHint: {
+    fontSize: 12,
+    color: '#3a6b46',
   },
   entry: {
     marginBottom: 16,

@@ -1,6 +1,5 @@
-import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { getAlphabet } from '../game/alphabet';
 import { useGame } from '../context/GameContext';
 import { Charset, GameConfig, RowsMode } from '../types/game';
@@ -14,7 +13,6 @@ function maxLengthFor(charset: Charset, allowRepetition: boolean): number {
 }
 
 export function ConfiguracoesScreen() {
-  const navigation = useNavigation<any>();
   const { loading, config, updateConfig } = useGame();
   const [draft, setDraft] = useState<GameConfig>(config);
 
@@ -33,10 +31,19 @@ export function ConfiguracoesScreen() {
   const max = maxLengthFor(draft.charset, draft.allowRepetition);
   const repetitionForced = maxLengthFor(draft.charset, false) < draft.length;
 
-  const setRows = (rows: RowsMode) => setDraft((d) => ({ ...d, rows }));
+  // Any change here is applied immediately and restarts the current game with the new rules.
+  const applyChange = (updater: (d: GameConfig) => GameConfig) => {
+    setDraft((d) => {
+      const next = updater(d);
+      updateConfig(next);
+      return next;
+    });
+  };
+
+  const setRows = (rows: RowsMode) => applyChange((d) => ({ ...d, rows }));
 
   const setCharset = (charset: Charset) => {
-    setDraft((d) => {
+    applyChange((d) => {
       const forced = maxLengthFor(charset, false) < d.length;
       const newMax = maxLengthFor(charset, forced ? true : d.allowRepetition);
       return {
@@ -49,7 +56,7 @@ export function ConfiguracoesScreen() {
   };
 
   const changeLength = (delta: number) => {
-    setDraft((d) => {
+    applyChange((d) => {
       const newMax = maxLengthFor(d.charset, d.allowRepetition);
       const next = Math.min(newMax, Math.max(MIN_LENGTH, d.length + delta));
       return { ...d, length: next };
@@ -57,27 +64,10 @@ export function ConfiguracoesScreen() {
   };
 
   const setAllowRepetition = (allowRepetition: boolean) => {
-    setDraft((d) => {
+    applyChange((d) => {
       const newMax = maxLengthFor(d.charset, allowRepetition);
       return { ...d, allowRepetition, length: Math.min(d.length, newMax) };
     });
-  };
-
-  const onSave = () => {
-    Alert.alert(
-      'Salvar configuração',
-      'Isso encerra o jogo atual (se ainda não terminado, será gravado no histórico como não adivinhado) e começa um novo jogo com as novas regras. Confirma?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Salvar e novo jogo',
-          onPress: () => {
-            updateConfig(draft);
-            navigation.navigate('Tabuleiro');
-          },
-        },
-      ]
-    );
   };
 
   return (
@@ -128,9 +118,9 @@ export function ConfiguracoesScreen() {
           </Text>
         )}
 
-        <TouchableOpacity style={styles.saveButton} onPress={onSave}>
-          <Text style={styles.saveButtonText}>Salvar e novo jogo</Text>
-        </TouchableOpacity>
+        <Text style={styles.autoApplyHint}>
+          Qualquer alteração acima já reinicia o jogo com as novas regras.
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -230,16 +220,11 @@ const styles = StyleSheet.create({
     color: '#888',
     marginTop: 6,
   },
-  saveButton: {
+  autoApplyHint: {
     marginTop: 28,
-    backgroundColor: '#1f8a3b',
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 16,
+    fontSize: 12,
+    color: '#888',
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });

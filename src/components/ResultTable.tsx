@@ -1,5 +1,6 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ArrowPairIcon, Dot, DotPairIcon, GREEN, YELLOW } from './ResultIcons';
 import { GuessEntry, RowsMode, isDoubleResult } from '../types/game';
 
 interface ResultTableProps {
@@ -7,20 +8,39 @@ interface ResultTableProps {
   guesses: GuessEntry[];
 }
 
-function formatGuess(entry: GuessEntry, rows: RowsMode): string {
-  if (rows === 1) return entry.guess.rowA.join('');
-  return `${entry.guess.rowA.join('')} / ${(entry.guess.rowB ?? []).join('')}`;
+function CharRow({ chars }: { chars: string[] }) {
+  return (
+    <View style={styles.charRow}>
+      {chars.map((char, i) => (
+        <View key={i} style={styles.charCell}>
+          <Text style={styles.guessText}>{char}</Text>
+        </View>
+      ))}
+    </View>
+  );
 }
 
-const SINGLE_HEADERS = ['Tentativa', 'Certo\npos.', 'Certo,\npos. errada'];
+function GuessCell({ entry, rows }: { entry: GuessEntry; rows: RowsMode }) {
+  if (rows === 1) {
+    return <CharRow chars={entry.guess.rowA} />;
+  }
+  return (
+    <View>
+      <CharRow chars={entry.guess.rowA} />
+      <CharRow chars={entry.guess.rowB ?? []} />
+    </View>
+  );
+}
+
+const SINGLE_HEADERS = ['Tentativa', <Dot key="g" color={GREEN} />, <Dot key="y" color={YELLOW} />];
 const DOUBLE_HEADERS = [
   'Tentativa',
-  'Pares\ncertos pos.',
-  'Pares\ninvert. pos.',
-  'Pares\ncertos fora',
-  'Pares\ninvert. fora',
-  'Caract.\ncertos pos.',
-  'Caract.\ncertos fora',
+  <DotPairIcon key="1" color={GREEN} />,
+  <ArrowPairIcon key="2" color={GREEN} />,
+  <DotPairIcon key="3" color={YELLOW} />,
+  <ArrowPairIcon key="4" color={YELLOW} />,
+  <Dot key="5" color={GREEN} />,
+  <Dot key="6" color={YELLOW} />,
 ];
 
 export function ResultTable({ rows, guesses }: ResultTableProps) {
@@ -30,9 +50,9 @@ export function ResultTable({ rows, guesses }: ResultTableProps) {
     <ScrollView horizontal>
       <View>
         <View style={styles.row}>
-          {headers.map((h) => (
-            <View key={h} style={[styles.cell, styles.headerCell]}>
-              <Text style={styles.headerText}>{h}</Text>
+          {headers.map((h, i) => (
+            <View key={i} style={[styles.cell, i === 0 ? styles.firstCell : styles.valueCell, styles.headerCell]}>
+              {typeof h === 'string' ? <Text style={styles.headerText}>{h}</Text> : h}
             </View>
           ))}
         </View>
@@ -45,9 +65,8 @@ export function ResultTable({ rows, guesses }: ResultTableProps) {
         ) : (
           guesses.map((entry, index) => {
             const result = entry.result;
-            const values = isDoubleResult(result)
+            const numbers = isDoubleResult(result)
               ? [
-                  formatGuess(entry, rows),
                   result.pairsCorrectPos,
                   result.pairsInvertedPos,
                   result.pairsCorrectWrongPos,
@@ -55,13 +74,16 @@ export function ResultTable({ rows, guesses }: ResultTableProps) {
                   result.charsCorrectPos,
                   result.charsCorrectWrongPos,
                 ]
-              : [formatGuess(entry, rows), result.correctPosition, result.correctWrongPosition];
+              : [result.correctPosition, result.correctWrongPosition];
 
             return (
               <View key={index} style={styles.row}>
-                {values.map((v, i) => (
-                  <View key={i} style={styles.cell}>
-                    <Text style={i === 0 ? styles.guessText : styles.valueText}>{v}</Text>
+                <View style={[styles.cell, styles.firstCell]}>
+                  <GuessCell entry={entry} rows={rows} />
+                </View>
+                {numbers.map((v, i) => (
+                  <View key={i} style={[styles.cell, styles.valueCell]}>
+                    <Text style={styles.valueText}>{v}</Text>
                   </View>
                 ))}
               </View>
@@ -78,13 +100,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   cell: {
-    width: 90,
     paddingVertical: 8,
-    paddingHorizontal: 4,
+    paddingHorizontal: 2,
     borderBottomWidth: 1,
     borderColor: '#e0e0e0',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  firstCell: {
+    width: 84,
+  },
+  valueCell: {
+    width: 38,
   },
   headerCell: {
     backgroundColor: '#f2f2f2',
@@ -94,9 +121,18 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
+  charRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  charCell: {
+    width: 12,
+    alignItems: 'center',
+  },
   guessText: {
     fontWeight: '700',
-    fontSize: 13,
+    fontSize: 12,
+    textAlign: 'center',
   },
   valueText: {
     fontSize: 14,

@@ -1,23 +1,25 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface GuessSlotsProps {
   length: number;
   values: string[];
-  rowLabel?: string;
+  selectedIndex: number | null;
+  onSlotPress: (index: number) => void;
 }
 
-export function GuessSlots({ length, values, rowLabel }: GuessSlotsProps) {
+export function GuessSlots({ length, values, selectedIndex, onSlotPress }: GuessSlotsProps) {
   return (
     <View style={styles.container}>
-      {rowLabel ? <Text style={styles.rowLabel}>{rowLabel}</Text> : null}
-      <View style={styles.slots}>
-        {Array.from({ length }).map((_, i) => (
-          <View key={i} style={styles.slot}>
-            <Text style={styles.slotText}>{values[i] ?? ''}</Text>
-          </View>
-        ))}
-      </View>
+      {Array.from({ length }).map((_, i) => (
+        <TouchableOpacity
+          key={i}
+          style={[styles.slot, i === selectedIndex && styles.slotSelected]}
+          onPress={() => onSlotPress(i)}
+        >
+          <Text style={styles.slotText}>{values[i] || ''}</Text>
+        </TouchableOpacity>
+      ))}
     </View>
   );
 }
@@ -25,17 +27,9 @@ export function GuessSlots({ length, values, rowLabel }: GuessSlotsProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 4,
-  },
-  rowLabel: {
-    width: 24,
-    fontSize: 12,
-    color: '#666',
-  },
-  slots: {
-    flexDirection: 'row',
+    justifyContent: 'center',
     gap: 6,
+    marginVertical: 4,
   },
   slot: {
     width: 36,
@@ -46,6 +40,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#fff',
+  },
+  slotSelected: {
+    borderColor: '#2f6fed',
+    borderWidth: 2,
+    backgroundColor: '#eef1f8',
   },
   slotText: {
     fontSize: 16,
