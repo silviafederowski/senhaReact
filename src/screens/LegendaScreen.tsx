@@ -44,11 +44,12 @@ const ENTRIES: LegendEntry[] = [
 export function LegendaScreen() {
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>O que cada ícone significa</Text>
-        <Text style={styles.subtitle}>
-          Esses são os títulos das colunas na lista de tentativas do tabuleiro.
-        </Text>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        minimumZoomScale={1}
+        maximumZoomScale={2.5}
+        pinchGestureEnabled
+      >
         {ENTRIES.map((entry, i) => (
           <View key={i} style={styles.row}>
             <View style={styles.iconBox}>{entry.icon}</View>
@@ -58,6 +59,13 @@ export function LegendaScreen() {
             </View>
           </View>
         ))}
+
+        <Text style={styles.tipTitle}>Fixar um caractere</Text>
+        <Text style={styles.tipText}>
+          Para fixar ou desafixar um caractere, basta clicar sobre ele na lista de
+          tentativas. Enquanto estiver verde, ele será oferecido automaticamente na
+          mesma posição nas próximas tentativas.
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -66,20 +74,12 @@ export function LegendaScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   content: {
+    flexGrow: 1,
+    justifyContent: 'center',
     padding: 16,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#666',
-    marginBottom: 20,
   },
   row: {
     flexDirection: 'row',
@@ -105,5 +105,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#888',
     marginTop: 2,
+  },
+  tipTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginTop: 20,
+    marginBottom: 6,
+  },
+  tipText: {
+    fontSize: 13,
+    color: '#444',
+    lineHeight: 19,
   },
 });

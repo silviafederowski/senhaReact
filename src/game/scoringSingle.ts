@@ -1,31 +1,20 @@
 import { GuessResultSingle } from '../types/game';
 
+/**
+ * Every position is judged independently against the whole secret, with no shared
+ * "supply" of characters to consume. A repeated guess character is not penalized for
+ * colliding with another guess position — each position gets its own verdict purely
+ * from whether it matches the secret at that index, or appears anywhere in the secret.
+ */
 export function evaluateSingle(secret: string[], guess: string[]): GuessResultSingle {
-  const length = secret.length;
-  const secretLeftover: string[] = [];
-  const guessLeftover: string[] = [];
-
   let correctPosition = 0;
-  for (let i = 0; i < length; i++) {
+  let correctWrongPosition = 0;
+
+  for (let i = 0; i < secret.length; i++) {
     if (guess[i] === secret[i]) {
       correctPosition++;
-    } else {
-      secretLeftover.push(secret[i]);
-      guessLeftover.push(guess[i]);
-    }
-  }
-
-  const counts = new Map<string, number>();
-  for (const c of secretLeftover) {
-    counts.set(c, (counts.get(c) ?? 0) + 1);
-  }
-
-  let correctWrongPosition = 0;
-  for (const c of guessLeftover) {
-    const remaining = counts.get(c) ?? 0;
-    if (remaining > 0) {
+    } else if (secret.includes(guess[i])) {
       correctWrongPosition++;
-      counts.set(c, remaining - 1);
     }
   }
 

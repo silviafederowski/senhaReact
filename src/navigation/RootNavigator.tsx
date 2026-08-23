@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { NavigationContainer } from '@react-navigation/native';
+import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import React from 'react';
-import { Alert } from 'react-native';
+import { Alert, Animated } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { ConfiguracoesScreen } from '../screens/ConfiguracoesScreen';
 import { HistoricoScreen } from '../screens/HistoricoScreen';
@@ -10,6 +10,35 @@ import { LegendaScreen } from '../screens/LegendaScreen';
 import { TabuleiroScreen } from '../screens/TabuleiroScreen';
 
 const Tab = createBottomTabNavigator();
+
+const transparentTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: 'transparent',
+  },
+};
+
+// Mimics a notebook page turning: the outgoing/incoming screen rotates around its
+// left edge (like a page pinned at the spine) instead of the default cross-fade.
+const pageTurnInterpolator = ({ current: { progress } }: { current: { progress: Animated.Value } }) => {
+  const rotateY = progress.interpolate({
+    inputRange: [-1, 0, 1],
+    outputRange: ['-100deg', '0deg', '100deg'],
+  });
+  const opacity = progress.interpolate({
+    inputRange: [-1, -0.6, 0, 0.6, 1],
+    outputRange: [0, 0.5, 1, 0.5, 0],
+  });
+
+  return {
+    sceneStyle: {
+      opacity,
+      transform: [{ perspective: 1200 }, { rotateY }],
+      transformOrigin: 'left',
+    },
+  };
+};
 
 function NullScreen() {
   return null;
@@ -26,10 +55,16 @@ export function RootNavigator() {
   };
 
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={transparentTheme}>
       <Tab.Navigator
+        detachInactiveScreens
         screenOptions={{
           headerTitleAlign: 'center',
+          headerStyle: { backgroundColor: 'transparent' },
+          headerShadowVisible: false,
+          sceneStyle: { backgroundColor: 'transparent' },
+          sceneStyleInterpolator: pageTurnInterpolator,
+          transitionSpec: { animation: 'timing', config: { duration: 750 } },
           tabBarShowLabel: false,
           tabBarActiveTintColor: '#2f6fed',
           tabBarInactiveTintColor: '#999',

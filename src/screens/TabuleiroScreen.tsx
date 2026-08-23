@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { getAlphabet } from '../game/alphabet';
+import { CelebrationAnimation } from '../components/CelebrationAnimation';
+import { CharGrid } from '../components/CharGrid';
 import { GuessKeypad } from '../components/GuessKeypad';
 import { GuessSlots } from '../components/GuessSlots';
 import { ResultTable } from '../components/ResultTable';
@@ -8,21 +10,42 @@ import { SecretDisplay } from '../components/SecretDisplay';
 import { Timer } from '../components/Timer';
 import { useGame } from '../context/GameContext';
 
-function emptyDraft(length: number): string[] {
-  return Array(length).fill('');
+function emptyArray<T>(length: number, value: T): T[] {
+  return Array(length).fill(value);
+}
+
+function draftFromPins(length: number, pins: (string | null)[]): string[] {
+  return Array.from({ length }, (_, i) => pins[i] ?? '');
 }
 
 export function TabuleiroScreen() {
   const { loading, currentGame, sessionStartedAt, submitGuess } = useGame();
   const [draftA, setDraftA] = useState<string[]>([]);
   const [draftB, setDraftB] = useState<string[]>([]);
+  const [pinnedA, setPinnedA] = useState<(string | null)[]>([]);
+  const [pinnedB, setPinnedB] = useState<(string | null)[]>([]);
   const [selected, setSelected] = useState(0);
   const [secretVisible, setSecretVisible] = useState(false);
+  const celebrationScale = useRef(new Animated.Value(0.5)).current;
+  const celebrationOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!currentGame?.finishedAt) return;
+    celebrationScale.setValue(0.5);
+    celebrationOpacity.setValue(0);
+    Animated.parallel([
+      Animated.spring(celebrationScale, { toValue: 1, friction: 4, tension: 60, useNativeDriver: true }),
+      Animated.timing(celebrationOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+    ]).start();
+  }, [currentGame?.finishedAt]);
 
   useEffect(() => {
     if (!currentGame) return;
-    setDraftA(emptyDraft(currentGame.config.length));
-    setDraftB(emptyDraft(currentGame.config.length));
+    const length = currentGame.config.length;
+    setPinnedA(emptyArray(length, null));
+    setPinnedB(emptyArray(length, null));
+    setDraftA(emptyArray(length, ''));
+    setDraftB(emptyArray(length, ''));
     setSelected(0);
     setSecretVisible(false);
   }, [currentGame?.startedAt]);
@@ -64,21 +87,47 @@ export function TabuleiroScreen() {
   };
 
   const onClearAll = () => {
-    setDraftA(emptyDraft(config.length));
-    setDraftB(emptyDraft(config.length));
+    setDraftA(draftFromPins(config.length, pinnedA));
+    setDraftB(draftFromPins(config.length, pinnedB));
     setSelected(0);
   };
 
   const onSubmit = () => {
     submitGuess({ rowA: draftA, rowB: config.rows === 2 ? draftB : undefined });
-    setDraftA(emptyDraft(config.length));
-    setDraftB(emptyDraft(config.length));
+    setDraftA(draftFromPins(config.length, pinnedA));
+    setDraftB(draftFromPins(config.length, pinnedB));
     setSelected(0);
+  };
+
+  // Tapping a character in the attempts history marks it green (a personal "confirmed"
+  // hint) and offers it at that same position/row in the next attempt. Tapping a green
+  // one again clears the pin. Each character (row A or row B) toggles independently.
+  const onTogglePin = (row: 'A' | 'B', position: number, char: string) => {
+    const pins = row === 'A' ? pinnedA : pinnedB;
+    const setPins = row === 'A' ? setPinnedA : setPinnedB;
+    const setDraft = row === 'A' ? setDraftA : setDraftB;
+
+    const alreadyGreen = pins[position] === char;
+    const next = alreadyGreen ? null : char;
+
+    setPins((prev) => prev.map((c, i) => (i === position ? next : c)));
+    setDraft((prev) =>
+      prev.map((c, i) => {
+        if (i !== position) return c;
+        if (next !== null) return next;
+        return c === char ? '' : c;
+      })
+    );
   };
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        minimumZoomScale={1}
+        maximumZoomScale={2.5}
+        pinchGestureEnabled
+      >
         <SecretDisplay
           secret={currentGame.secret}
           rows={config.rows}
@@ -92,14 +141,21 @@ export function TabuleiroScreen() {
         </View>
 
         {finished && (
-          <View style={styles.banner}>
-            <Text style={styles.bannerText}>🎉 Você acertou a senha! 🎉</Text>
-            <Text style={styles.bannerSecret}>
-              {currentGame.secret.rowA.join('')}
-              {config.rows === 2 ? ` / ${(currentGame.secret.rowB ?? []).join('')}` : ''}
-            </Text>
-            <Text style={styles.bannerHint}>Toque em Resetar, na barra inferior, para jogar de novo.</Text>
-          </View>
+          <Animated.View
+            style={[
+              styles.banner,
+              { opacity: celebrationOpacity, transform: [{ scale: celebrationScale }] },
+            ]}
+          >
+            <CelebrationAnimation key={currentGame.finishedAt} />
+            <View style={styles.bannerSecret}>
+              <CharGrid
+                lines={config.rows === 2 ? [currentGame.secret.rowA, currentGame.secret.rowB ?? []] : [currentGame.secret.rowA]}
+                fontSize={24}
+                cellWidth={30}
+              />
+            </View>
+          </Animated.View>
         )}
 
         {!finished && (
@@ -131,8 +187,13 @@ export function TabuleiroScreen() {
           </View>
         )}
 
-        <Text style={styles.sectionTitle}>Tentativas</Text>
-        <ResultTable rows={config.rows} guesses={currentGame.guesses} />
+        <ResultTable
+          rows={config.rows}
+          guesses={currentGame.guesses}
+          pinnedA={pinnedA}
+          pinnedB={pinnedB}
+          onTogglePin={onTogglePin}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -141,7 +202,7 @@ export function TabuleiroScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   content: {
     padding: 16,
@@ -162,28 +223,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     backgroundColor: '#e3f8e8',
   },
-  bannerText: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
   bannerSecret: {
-    fontSize: 22,
-    fontWeight: '800',
-    letterSpacing: 2,
-    marginBottom: 8,
-  },
-  bannerHint: {
-    fontSize: 12,
-    color: '#3a6b46',
+    marginTop: 4,
   },
   entry: {
     marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    marginBottom: 6,
-    color: '#444',
   },
 });

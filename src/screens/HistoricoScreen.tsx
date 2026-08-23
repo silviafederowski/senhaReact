@@ -1,7 +1,9 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { HistoryTable } from '../components/HistoryTable';
 import { useGame } from '../context/GameContext';
+import { icon3D } from '../styles/shadows';
 
 export function HistoricoScreen() {
   const { loading, history, clearHistory } = useGame();
@@ -23,11 +25,15 @@ export function HistoricoScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <TouchableOpacity style={styles.clearButton} onPress={onClear}>
-          <Text style={styles.clearButtonText}>Limpar histórico</Text>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        minimumZoomScale={1}
+        maximumZoomScale={2.5}
+        pinchGestureEnabled
+      >
+        <TouchableOpacity style={styles.clearButton} onPress={onClear} accessibilityLabel="Limpar histórico">
+          <MaterialCommunityIcons name="eraser" size={26} color="#c0392b" style={icon3D} />
         </TouchableOpacity>
-        <Text style={styles.hint}>Toque em um cabeçalho da tabela para ordenar por essa coluna.</Text>
         <HistoryTable history={history} />
       </ScrollView>
     </SafeAreaView>
@@ -37,7 +43,7 @@ export function HistoricoScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   content: {
     padding: 16,
@@ -48,19 +54,6 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     alignSelf: 'flex-start',
-    backgroundColor: '#c0392b',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  clearButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-  },
-  hint: {
-    fontSize: 12,
-    color: '#888',
-    marginBottom: 10,
+    marginBottom: 14,
   },
 });

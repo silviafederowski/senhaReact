@@ -1,9 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { HistoryEntry } from '../types/game';
-import { formatDateTime, formatDuration } from '../utils/time';
+import { formatDateTime, formatMinutes } from '../utils/time';
 
-type SortKey = 'startedAt' | 'durationMs' | 'guessedCorrectly';
+type SortKey = 'startedAt' | 'durationMs' | 'guessCount' | 'guessedCorrectly';
 type SortDir = 'asc' | 'desc';
 
 interface HistoryTableProps {
@@ -12,8 +13,9 @@ interface HistoryTableProps {
 
 const COLUMNS: { key: SortKey; label: string }[] = [
   { key: 'startedAt', label: 'Início' },
-  { key: 'durationMs', label: 'Duração' },
-  { key: 'guessedCorrectly', label: 'Resultado' },
+  { key: 'durationMs', label: 'Duração (min)' },
+  { key: 'guessCount', label: 'Tentativas' },
+  { key: 'guessedCorrectly', label: '' },
 ];
 
 export function HistoryTable({ history }: HistoryTableProps) {
@@ -65,12 +67,17 @@ export function HistoryTable({ history }: HistoryTableProps) {
               <Text style={styles.valueText}>{formatDateTime(entry.startedAt)}</Text>
             </View>
             <View style={styles.cell}>
-              <Text style={styles.valueText}>{formatDuration(entry.durationMs)}</Text>
+              <Text style={styles.valueText}>{formatMinutes(entry.durationMs)}</Text>
             </View>
             <View style={styles.cell}>
-              <Text style={[styles.valueText, entry.guessedCorrectly ? styles.won : styles.lost]}>
-                {entry.guessedCorrectly ? 'Adivinhada' : 'Não adivinhada'}
-              </Text>
+              <Text style={styles.valueText}>{entry.guessCount ?? '-'}</Text>
+            </View>
+            <View style={styles.cell}>
+              {entry.guessedCorrectly ? (
+                <Ionicons name="checkmark" size={26} color="#1f8a3b" />
+              ) : (
+                <Ionicons name="close" size={22} color="#c0392b" />
+              )}
             </View>
           </View>
         ))
@@ -104,16 +111,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
   },
-  won: {
-    color: '#1f8a3b',
-    fontWeight: '700',
-  },
-  lost: {
-    color: '#c0392b',
-    fontWeight: '700',
-  },
   emptyCell: {
-    flex: 3,
+    flex: 4,
   },
   emptyText: {
     color: '#888',

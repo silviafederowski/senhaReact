@@ -1,6 +1,7 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { icon3D, raisedShadow } from '../styles/shadows';
 
 interface GuessKeypadProps {
   alphabet: string[];
@@ -47,7 +48,7 @@ export function GuessKeypad({
           accessibilityLabel="Limpar tudo"
           style={styles.actionButton}
         >
-          <MaterialCommunityIcons name="eraser" size={34} color={canClear ? '#1a1a1a' : '#ccc'} />
+          <MaterialCommunityIcons name="eraser" size={34} color={canClear ? '#000' : '#ccc'} style={canClear && icon3D} />
         </TouchableOpacity>
         <TouchableOpacity
           disabled={!canSubmit}
@@ -55,7 +56,7 @@ export function GuessKeypad({
           accessibilityLabel="Enviar tentativa"
           style={styles.actionButton}
         >
-          <Ionicons name="checkmark" size={38} color={canSubmit ? '#1a1a1a' : '#ccc'} />
+          <Ionicons name="checkmark" size={38} color={canSubmit ? '#000' : '#ccc'} style={canSubmit && icon3D} />
         </TouchableOpacity>
       </View>
     </View>
@@ -76,9 +77,10 @@ const styles = StyleSheet.create({
     height: 36,
     paddingHorizontal: 6,
     borderRadius: 6,
-    backgroundColor: '#2f6fed',
+    backgroundColor: '#707070',
     alignItems: 'center',
     justifyContent: 'center',
+    ...raisedShadow,
   },
   keyDisabled: {
     backgroundColor: '#ccc',

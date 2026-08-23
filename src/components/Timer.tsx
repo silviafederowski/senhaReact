@@ -32,11 +32,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   label: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#666',
   },
   value: {
-    fontSize: 18,
+    fontSize: 13,
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },

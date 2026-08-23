@@ -69,5 +69,6 @@ export function makeHistoryEntry(game: CurrentGame, guessedCorrectly: boolean): 
     endedAt,
     durationMs: endedAt - game.startedAt,
     guessedCorrectly,
+    guessCount: game.guesses.length,
   };
 }

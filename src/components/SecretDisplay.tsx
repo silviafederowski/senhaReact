@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { RowsMode, Secret } from '../types/game';
+import { raisedShadow } from '../styles/shadows';
+import { CharGrid } from './CharGrid';
 
 interface SecretDisplayProps {
   secret: Secret;
@@ -10,23 +12,17 @@ interface SecretDisplayProps {
   onToggle: () => void;
 }
 
-function CharRow({ chars, visible }: { chars: string[]; visible: boolean }) {
-  return (
-    <View style={styles.charRow}>
-      {chars.map((char, i) => (
-        <View key={i} style={styles.charCell}>
-          <Text style={styles.secretText}>{visible ? char : '?'}</Text>
-        </View>
-      ))}
-    </View>
-  );
+function lineFor(chars: string[], visible: boolean): string[] {
+  return visible ? chars : chars.map(() => '?');
 }
 
 export function SecretDisplay({ secret, rows, visible, onToggle }: SecretDisplayProps) {
+  const lines = [lineFor(secret.rowA, visible)];
+  if (rows === 2) lines.push(lineFor(secret.rowB ?? [], visible));
+
   return (
     <View style={styles.container}>
-      <CharRow chars={secret.rowA} visible={visible} />
-      {rows === 2 && <CharRow chars={secret.rowB ?? []} visible={visible} />}
+      <CharGrid lines={lines} fontSize={16} cellWidth={24} />
       <TouchableOpacity
         style={styles.toggleButton}
         onPress={onToggle}
@@ -43,19 +39,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  charRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  charCell: {
-    width: 24,
-    alignItems: 'center',
-  },
-  secretText: {
-    fontSize: 16,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
   toggleButton: {
     marginTop: 4,
     backgroundColor: '#eef1f8',
@@ -64,5 +47,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    ...raisedShadow,
   },
 });

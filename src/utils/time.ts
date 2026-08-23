@@ -7,6 +7,11 @@ export function formatDuration(ms: number): string {
   return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }
 
+export function formatMinutes(ms: number): string {
+  const minutes = Math.max(0, Math.round(ms / 60000));
+  return minutes.toString();
+}
+
 export function formatDateTime(timestamp: number): string {
   const date = new Date(timestamp);
   const pad = (n: number) => n.toString().padStart(2, '0');

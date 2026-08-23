@@ -1,15 +1,60 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { getAlphabet } from '../game/alphabet';
+import { CharGrid } from '../components/CharGrid';
+import { CrossedChar } from '../components/CrossedChar';
+import { RowsIcon } from '../components/RowsIcon';
 import { useGame } from '../context/GameContext';
+import { raisedShadow } from '../styles/shadows';
 import { Charset, GameConfig, RowsMode } from '../types/game';
 
 const MIN_LENGTH = 3;
 const HARD_MAX_LENGTH = 10;
+const ACTIVE_COLOR = '#fff';
+const INACTIVE_COLOR = '#000';
+const MEDIUM_GRAY = '#707070';
 
 function maxLengthFor(charset: Charset, allowRepetition: boolean): number {
   if (allowRepetition) return HARD_MAX_LENGTH;
   return Math.min(HARD_MAX_LENGTH, getAlphabet(charset).length);
+}
+
+function PreviewText({
+  text,
+  secondLine,
+  rows,
+  color,
+}: {
+  text: string;
+  secondLine: string;
+  rows: RowsMode;
+  color: string;
+}) {
+  return (
+    <View>
+      <Text style={[styles.previewText, { color }]}>{text}</Text>
+      {rows === 2 && <Text style={[styles.previewText, { color }]}>{secondLine}</Text>}
+    </View>
+  );
+}
+
+function RepetitionCrossedPreview({ rows, color }: { rows: RowsMode; color: string }) {
+  return (
+    <View>
+      <View style={styles.repetitionRow}>
+        <Text style={[styles.previewText, { color }]}>A</Text>
+        <CrossedChar char="A" fontSize={18} color={color} />
+        <Text style={[styles.previewText, { color }]}>B</Text>
+      </View>
+      {rows === 2 && (
+        <View style={styles.repetitionRow}>
+          <Text style={[styles.previewText, { color }]}>A</Text>
+          <CrossedChar char="A" fontSize={18} color={color} />
+          <Text style={[styles.previewText, { color }]}>B</Text>
+        </View>
+      )}
+    </View>
+  );
 }
 
 export function ConfiguracoesScreen() {
@@ -28,7 +73,6 @@ export function ConfiguracoesScreen() {
     );
   }
 
-  const max = maxLengthFor(draft.charset, draft.allowRepetition);
   const repetitionForced = maxLengthFor(draft.charset, false) < draft.length;
 
   // Any change here is applied immediately and restarts the current game with the new rules.
@@ -70,80 +114,111 @@ export function ConfiguracoesScreen() {
     });
   };
 
+  const previewLine = Array(draft.length).fill('?');
+  const previewLines = draft.rows === 2 ? [previewLine, previewLine] : [previewLine];
+
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.sectionTitle}>Linhas</Text>
-        <View style={styles.segmented}>
-          <SegmentButton label="Linha única" active={draft.rows === 1} onPress={() => setRows(1)} />
-          <SegmentButton label="Linha dupla" active={draft.rows === 2} onPress={() => setRows(2)} />
+      <ScrollView
+        contentContainerStyle={styles.content}
+        minimumZoomScale={1}
+        maximumZoomScale={2.5}
+        pinchGestureEnabled
+      >
+        <View style={[styles.optionGroup, styles.segmented]}>
+          <IconButton active={draft.rows === 1} onPress={() => setRows(1)}>
+            <RowsIcon rows={1} color={draft.rows === 1 ? ACTIVE_COLOR : INACTIVE_COLOR} />
+          </IconButton>
+          <IconButton active={draft.rows === 2} onPress={() => setRows(2)}>
+            <RowsIcon rows={2} color={draft.rows === 2 ? ACTIVE_COLOR : INACTIVE_COLOR} />
+          </IconButton>
         </View>
 
-        <Text style={styles.sectionTitle}>Número de caracteres por linha</Text>
-        <View style={styles.stepper}>
-          <TouchableOpacity style={styles.stepButton} onPress={() => changeLength(-1)}>
-            <Text style={styles.stepButtonText}>-</Text>
-          </TouchableOpacity>
-          <Text style={styles.stepValue}>{draft.length}</Text>
-          <TouchableOpacity style={styles.stepButton} onPress={() => changeLength(1)}>
-            <Text style={styles.stepButtonText}>+</Text>
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.hint}>Máximo atual: {max}</Text>
-
-        <Text style={styles.sectionTitle}>Caracteres permitidos</Text>
-        <View style={styles.segmented}>
-          <SegmentButton label="Só letras" active={draft.charset === 'letters'} onPress={() => setCharset('letters')} />
-          <SegmentButton label="Só números" active={draft.charset === 'numbers'} onPress={() => setCharset('numbers')} />
-          <SegmentButton label="Letras e números" active={draft.charset === 'both'} onPress={() => setCharset('both')} />
+        <View style={[styles.optionGroup, styles.stepperGroup]}>
+          <View style={styles.stepper}>
+            <TouchableOpacity style={styles.stepButton} onPress={() => changeLength(-1)}>
+              <Text style={styles.stepButtonText}>-</Text>
+            </TouchableOpacity>
+            <Text style={styles.stepValue}>{draft.length}</Text>
+            <TouchableOpacity style={styles.stepButton} onPress={() => changeLength(1)}>
+              <Text style={styles.stepButtonText}>+</Text>
+            </TouchableOpacity>
+          </View>
+          <CharGrid lines={previewLines} fontSize={14} cellWidth={18} />
         </View>
 
-        <Text style={styles.sectionTitle}>Repetição de caracteres</Text>
+        <View style={[styles.optionGroup, styles.segmented]}>
+          <IconButton active={draft.charset === 'letters'} onPress={() => setCharset('letters')}>
+            <PreviewText
+              text="ABC"
+              secondLine="HMY"
+              rows={draft.rows}
+              color={draft.charset === 'letters' ? ACTIVE_COLOR : INACTIVE_COLOR}
+            />
+          </IconButton>
+          <IconButton active={draft.charset === 'numbers'} onPress={() => setCharset('numbers')}>
+            <PreviewText
+              text="123"
+              secondLine="704"
+              rows={draft.rows}
+              color={draft.charset === 'numbers' ? ACTIVE_COLOR : INACTIVE_COLOR}
+            />
+          </IconButton>
+          <IconButton active={draft.charset === 'both'} onPress={() => setCharset('both')}>
+            <PreviewText
+              text="C1X6"
+              secondLine="BC91"
+              rows={draft.rows}
+              color={draft.charset === 'both' ? ACTIVE_COLOR : INACTIVE_COLOR}
+            />
+          </IconButton>
+        </View>
+
         <View style={styles.segmented}>
-          <SegmentButton
-            label="Com repetição"
-            active={draft.allowRepetition}
-            onPress={() => setAllowRepetition(true)}
-          />
-          <SegmentButton
-            label="Sem repetição"
+          <IconButton active={draft.allowRepetition} onPress={() => setAllowRepetition(true)}>
+            <PreviewText
+              text="AAA"
+              secondLine="AAA"
+              rows={draft.rows}
+              color={draft.allowRepetition ? ACTIVE_COLOR : INACTIVE_COLOR}
+            />
+          </IconButton>
+          <IconButton
             active={!draft.allowRepetition}
             onPress={() => setAllowRepetition(false)}
             disabled={repetitionForced}
-          />
+          >
+            <RepetitionCrossedPreview rows={draft.rows} color={!draft.allowRepetition ? ACTIVE_COLOR : INACTIVE_COLOR} />
+          </IconButton>
         </View>
         {repetitionForced && (
           <Text style={styles.hint}>
             Com {draft.length} caracteres não é possível evitar repetição neste alfabeto — repetição forçada.
           </Text>
         )}
-
-        <Text style={styles.autoApplyHint}>
-          Qualquer alteração acima já reinicia o jogo com as novas regras.
-        </Text>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function SegmentButton({
-  label,
+function IconButton({
   active,
   onPress,
   disabled,
+  children,
 }: {
-  label: string;
   active: boolean;
   onPress: () => void;
   disabled?: boolean;
+  children: React.ReactNode;
 }) {
   return (
     <TouchableOpacity
       disabled={disabled}
       onPress={onPress}
-      style={[styles.segmentButton, active && styles.segmentButtonActive, disabled && styles.segmentButtonDisabled]}
+      style={[styles.iconButton, active && styles.iconButtonActive, disabled && styles.iconButtonDisabled]}
     >
-      <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{label}</Text>
+      {children}
     </TouchableOpacity>
   );
 }
@@ -151,45 +226,60 @@ function SegmentButton({
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   content: {
+    flexGrow: 1,
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
     padding: 16,
   },
   loadingText: {
     textAlign: 'center',
     marginTop: 40,
   },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#444',
-    marginTop: 18,
-    marginBottom: 8,
+  optionGroup: {
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderColor: '#fff',
+    width: '100%',
   },
   segmented: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    justifyContent: 'center',
+    gap: 10,
   },
-  segmentButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 8,
+  iconButton: {
+    minWidth: 64,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 10,
     backgroundColor: '#eef1f8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...raisedShadow,
   },
-  segmentButtonActive: {
-    backgroundColor: '#2f6fed',
+  iconButtonActive: {
+    backgroundColor: MEDIUM_GRAY,
   },
-  segmentButtonDisabled: {
+  iconButtonDisabled: {
     opacity: 0.4,
   },
-  segmentText: {
-    fontWeight: '600',
-    color: '#2f4a8f',
+  previewText: {
+    fontSize: 18,
+    fontWeight: 'normal',
+    letterSpacing: 3,
+    textAlign: 'center',
   },
-  segmentTextActive: {
-    color: '#fff',
+  repetitionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  stepperGroup: {
+    alignItems: 'center',
+    gap: 4,
   },
   stepper: {
     flexDirection: 'row',
@@ -197,17 +287,18 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   stepButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
-    backgroundColor: '#2f6fed',
+    width: 58,
+    height: 58,
+    borderRadius: 10,
+    backgroundColor: MEDIUM_GRAY,
     alignItems: 'center',
     justifyContent: 'center',
+    ...raisedShadow,
   },
   stepButtonText: {
     color: '#fff',
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: 28,
+    fontWeight: 'normal',
   },
   stepValue: {
     fontSize: 20,
@@ -218,13 +309,6 @@ const styles = StyleSheet.create({
   hint: {
     fontSize: 12,
     color: '#888',
-    marginTop: 6,
-  },
-  autoApplyHint: {
-    marginTop: 28,
-    fontSize: 12,
-    color: '#888',
     textAlign: 'center',
-    fontStyle: 'italic',
   },
 });

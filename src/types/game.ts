@@ -48,6 +48,7 @@ export interface HistoryEntry {
   endedAt: number;
   durationMs: number;
   guessedCorrectly: boolean;
+  guessCount: number;
 }
 
 export function isDoubleResult(result: GuessResult): result is GuessResultDouble {
