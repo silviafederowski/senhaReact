@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Animated, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { BlurView } from 'expo-blur';
+import React, { useEffect, useState } from 'react';
+import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { getAlphabet } from '../game/alphabet';
-import { CelebrationAnimation } from '../components/CelebrationAnimation';
+import { CelebratingSecretReveal, totalCelebrationDuration } from '../components/CelebratingSecretReveal';
 import { CharGrid } from '../components/CharGrid';
 import { GuessKeypad } from '../components/GuessKeypad';
 import { GuessSlots } from '../components/GuessSlots';
@@ -19,25 +20,13 @@ function draftFromPins(length: number, pins: (string | null)[]): string[] {
 }
 
 export function TabuleiroScreen() {
-  const { loading, currentGame, sessionStartedAt, submitGuess } = useGame();
+  const { loading, currentGame, sessionStartedAt, submitGuess, markCelebrated } = useGame();
   const [draftA, setDraftA] = useState<string[]>([]);
   const [draftB, setDraftB] = useState<string[]>([]);
   const [pinnedA, setPinnedA] = useState<(string | null)[]>([]);
   const [pinnedB, setPinnedB] = useState<(string | null)[]>([]);
   const [selected, setSelected] = useState(0);
   const [secretVisible, setSecretVisible] = useState(false);
-  const celebrationScale = useRef(new Animated.Value(0.5)).current;
-  const celebrationOpacity = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (!currentGame?.finishedAt) return;
-    celebrationScale.setValue(0.5);
-    celebrationOpacity.setValue(0);
-    Animated.parallel([
-      Animated.spring(celebrationScale, { toValue: 1, friction: 4, tension: 60, useNativeDriver: true }),
-      Animated.timing(celebrationOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-    ]).start();
-  }, [currentGame?.finishedAt]);
 
   useEffect(() => {
     if (!currentGame) return;
@@ -50,6 +39,15 @@ export function TabuleiroScreen() {
     setSecretVisible(false);
   }, [currentGame?.startedAt]);
 
+  // Play the celebration only the first time this particular win is seen -- not on every
+  // remount (e.g. switching tabs and back, or reopening the app on an already-won game).
+  useEffect(() => {
+    if (!currentGame?.finishedAt || currentGame.celebrated) return;
+    const ms = totalCelebrationDuration(currentGame.secret, currentGame.config.rows);
+    const timer = setTimeout(markCelebrated, ms);
+    return () => clearTimeout(timer);
+  }, [currentGame?.finishedAt, currentGame?.celebrated]);
+
   if (loading || !currentGame) {
     return (
       <SafeAreaView style={styles.safe}>
@@ -60,6 +58,7 @@ export function TabuleiroScreen() {
 
   const { config } = currentGame;
   const finished = Boolean(currentGame.finishedAt);
+  const celebrating = finished && !currentGame.celebrated;
   const alphabet = getAlphabet(config.charset);
 
   const totalSlots = config.rows === 2 ? config.length * 2 : config.length;
@@ -73,7 +72,7 @@ export function TabuleiroScreen() {
   const disabledChars = config.allowRepetition ? new Set<string>() : usedElsewhereInSelectedRow;
 
   const canType = !finished;
-  const canClear = !finished && (draftA.some((c) => c !== '') || draftB.some((c) => c !== ''));
+  const canClear = !finished;
   const canSubmit =
     !finished && draftA.every((c) => c !== '') && (config.rows === 1 || draftB.every((c) => c !== ''));
 
@@ -128,35 +127,30 @@ export function TabuleiroScreen() {
         maximumZoomScale={2.5}
         pinchGestureEnabled
       >
-        <SecretDisplay
-          secret={currentGame.secret}
-          rows={config.rows}
-          visible={secretVisible}
-          onToggle={() => setSecretVisible((v) => !v)}
-        />
+        {!finished && (
+          <SecretDisplay
+            secret={currentGame.secret}
+            rows={config.rows}
+            visible={secretVisible}
+            onToggle={() => setSecretVisible((v) => !v)}
+          />
+        )}
+
+        {finished && !celebrating && (
+          <View style={styles.settledSecret}>
+            <CharGrid
+              lines={config.rows === 2 ? [currentGame.secret.rowA, currentGame.secret.rowB ?? []] : [currentGame.secret.rowA]}
+              fontSize={20}
+              cellWidth={28}
+            />
+            <Text style={styles.hint}>Toque em Resetar, na barra inferior, para jogar de novo.</Text>
+          </View>
+        )}
 
         <View style={styles.timers}>
           <Timer label="Tempo desta senha" startedAt={currentGame.startedAt} endedAt={currentGame.finishedAt} />
           <Timer label="Tempo deste acesso" startedAt={sessionStartedAt} />
         </View>
-
-        {finished && (
-          <Animated.View
-            style={[
-              styles.banner,
-              { opacity: celebrationOpacity, transform: [{ scale: celebrationScale }] },
-            ]}
-          >
-            <CelebrationAnimation key={currentGame.finishedAt} />
-            <View style={styles.bannerSecret}>
-              <CharGrid
-                lines={config.rows === 2 ? [currentGame.secret.rowA, currentGame.secret.rowB ?? []] : [currentGame.secret.rowA]}
-                fontSize={24}
-                cellWidth={30}
-              />
-            </View>
-          </Animated.View>
-        )}
 
         {!finished && (
           <View style={styles.entry}>
@@ -195,6 +189,22 @@ export function TabuleiroScreen() {
           onTogglePin={onTogglePin}
         />
       </ScrollView>
+
+      {celebrating && (
+        <>
+          <BlurView intensity={50} tint="light" style={StyleSheet.absoluteFill} />
+          <View style={styles.celebrationOverlay} pointerEvents="none">
+            <CelebratingSecretReveal
+              key={currentGame.finishedAt}
+              secret={currentGame.secret}
+              rows={config.rows}
+              size={46}
+              fontSize={32}
+            />
+            <Text style={styles.hint}>Toque em Resetar, na barra inferior, para jogar de novo.</Text>
+          </View>
+        </>
+      )}
     </SafeAreaView>
   );
 }
@@ -216,15 +226,24 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     marginBottom: 12,
   },
-  banner: {
-    padding: 16,
-    borderRadius: 10,
+  settledSecret: {
     alignItems: 'center',
-    marginBottom: 16,
-    backgroundColor: '#e3f8e8',
+    marginBottom: 8,
   },
-  bannerSecret: {
-    marginTop: 4,
+  celebrationOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hint: {
+    fontSize: 12,
+    color: '#3a6b46',
+    textAlign: 'center',
+    marginTop: 16,
   },
   entry: {
     marginBottom: 16,

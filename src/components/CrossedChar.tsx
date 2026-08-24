@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { FONT_BUTTON } from '../styles/fonts';
 
 interface CrossedCharProps {
   char: string;
@@ -25,7 +26,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   char: {
-    fontWeight: 'normal',
+    fontFamily: FONT_BUTTON,
   },
   crossWrapper: {
     position: 'absolute',

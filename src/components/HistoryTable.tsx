@@ -13,7 +13,7 @@ interface HistoryTableProps {
 
 const COLUMNS: { key: SortKey; label: string }[] = [
   { key: 'startedAt', label: 'Início' },
-  { key: 'durationMs', label: 'Duração (min)' },
+  { key: 'durationMs', label: 'Tempo (min)' },
   { key: 'guessCount', label: 'Tentativas' },
   { key: 'guessedCorrectly', label: '' },
 ];
@@ -54,14 +54,7 @@ export function HistoryTable({ history }: HistoryTableProps) {
           </TouchableOpacity>
         ))}
       </View>
-      {sorted.length === 0 ? (
-        <View style={styles.row}>
-          <View style={[styles.cell, styles.emptyCell]}>
-            <Text style={styles.emptyText}>Nenhum jogo no histórico ainda.</Text>
-          </View>
-        </View>
-      ) : (
-        sorted.map((entry) => (
+      {sorted.map((entry) => (
           <View key={entry.id} style={styles.row}>
             <View style={styles.cell}>
               <Text style={styles.valueText}>{formatDateTime(entry.startedAt)}</Text>
@@ -74,14 +67,13 @@ export function HistoryTable({ history }: HistoryTableProps) {
             </View>
             <View style={styles.cell}>
               {entry.guessedCorrectly ? (
-                <Ionicons name="checkmark" size={26} color="#1f8a3b" />
+                <Ionicons name="checkmark" size={30} color="#1f8a3b" style={styles.resultIcon} />
               ) : (
-                <Ionicons name="close" size={22} color="#c0392b" />
+                <Ionicons name="close" size={26} color="#c0392b" style={styles.resultIcon} />
               )}
             </View>
           </View>
-        ))
-      )}
+        ))}
     </View>
   );
 }
@@ -89,6 +81,10 @@ export function HistoryTable({ history }: HistoryTableProps) {
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
+  },
+  resultIcon: {
+    fontWeight: 'bold',
+    fontStyle: 'italic',
   },
   cell: {
     flex: 1,
@@ -110,12 +106,5 @@ const styles = StyleSheet.create({
   valueText: {
     fontSize: 13,
     textAlign: 'center',
-  },
-  emptyCell: {
-    flex: 4,
-  },
-  emptyText: {
-    color: '#888',
-    fontStyle: 'italic',
   },
 });

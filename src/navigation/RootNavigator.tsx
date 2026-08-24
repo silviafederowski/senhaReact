@@ -2,8 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import React from 'react';
-import { Alert, Animated } from 'react-native';
+import { Animated } from 'react-native';
 import { useGame } from '../context/GameContext';
+import { FONT_TITLE } from '../styles/fonts';
 import { ConfiguracoesScreen } from '../screens/ConfiguracoesScreen';
 import { HistoricoScreen } from '../screens/HistoricoScreen';
 import { LegendaScreen } from '../screens/LegendaScreen';
@@ -44,24 +45,28 @@ function NullScreen() {
   return null;
 }
 
-export function RootNavigator() {
+interface RootNavigatorProps {
+  onRouteChange?: (routeName: string) => void;
+}
+
+export function RootNavigator({ onRouteChange }: RootNavigatorProps) {
   const { resetGame } = useGame();
 
-  const confirmReset = () => {
-    Alert.alert('Resetar jogo', 'Tem certeza que deseja começar um novo jogo?', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Resetar', style: 'destructive', onPress: resetGame },
-    ]);
-  };
-
   return (
-    <NavigationContainer theme={transparentTheme}>
+    <NavigationContainer
+      theme={transparentTheme}
+      onStateChange={(state) => {
+        const routeName = state?.routes[state.index]?.name;
+        if (routeName) onRouteChange?.(routeName);
+      }}
+    >
       <Tab.Navigator
         detachInactiveScreens
         screenOptions={{
           headerTitleAlign: 'center',
           headerStyle: { backgroundColor: 'transparent' },
           headerShadowVisible: false,
+          headerTitleStyle: { fontFamily: FONT_TITLE, fontSize: 30 },
           sceneStyle: { backgroundColor: 'transparent' },
           sceneStyleInterpolator: pageTurnInterpolator,
           transitionSpec: { animation: 'timing', config: { duration: 750 } },
@@ -107,7 +112,7 @@ export function RootNavigator() {
           listeners={{
             tabPress: (e) => {
               e.preventDefault();
-              confirmReset();
+              resetGame();
             },
           }}
         />

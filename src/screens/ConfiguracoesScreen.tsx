@@ -4,15 +4,18 @@ import { getAlphabet } from '../game/alphabet';
 import { CharGrid } from '../components/CharGrid';
 import { CrossedChar } from '../components/CrossedChar';
 import { RowsIcon } from '../components/RowsIcon';
+import { ShinyGoldBackground } from '../components/ShinyGoldBackground';
+import { ShinySilverBackground } from '../components/ShinySilverBackground';
 import { useGame } from '../context/GameContext';
-import { raisedShadow } from '../styles/shadows';
+import { FONT_BUTTON } from '../styles/fonts';
+import { agedGoldShadow } from '../styles/shadows';
 import { Charset, GameConfig, RowsMode } from '../types/game';
+import { describeEnvironment } from '../utils/environment';
 
 const MIN_LENGTH = 3;
 const HARD_MAX_LENGTH = 10;
-const ACTIVE_COLOR = '#fff';
+const ACTIVE_COLOR = '#5c3a06';
 const INACTIVE_COLOR = '#000';
-const MEDIUM_GRAY = '#707070';
 
 function maxLengthFor(charset: Charset, allowRepetition: boolean): number {
   if (allowRepetition) return HARD_MAX_LENGTH;
@@ -137,11 +140,17 @@ export function ConfiguracoesScreen() {
         <View style={[styles.optionGroup, styles.stepperGroup]}>
           <View style={styles.stepper}>
             <TouchableOpacity style={styles.stepButton} onPress={() => changeLength(-1)}>
-              <Text style={styles.stepButtonText}>-</Text>
+              <View style={styles.stepButtonClip}>
+                <ShinyGoldBackground borderRadius={18} />
+                <Text style={styles.stepButtonText}>-</Text>
+              </View>
             </TouchableOpacity>
             <Text style={styles.stepValue}>{draft.length}</Text>
             <TouchableOpacity style={styles.stepButton} onPress={() => changeLength(1)}>
-              <Text style={styles.stepButtonText}>+</Text>
+              <View style={styles.stepButtonClip}>
+                <ShinyGoldBackground borderRadius={18} />
+                <Text style={styles.stepButtonText}>+</Text>
+              </View>
             </TouchableOpacity>
           </View>
           <CharGrid lines={previewLines} fontSize={14} cellWidth={18} />
@@ -196,6 +205,8 @@ export function ConfiguracoesScreen() {
             Com {draft.length} caracteres não é possível evitar repetição neste alfabeto — repetição forçada.
           </Text>
         )}
+
+        <Text style={styles.environmentInfo}>{describeEnvironment()}</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -216,9 +227,12 @@ function IconButton({
     <TouchableOpacity
       disabled={disabled}
       onPress={onPress}
-      style={[styles.iconButton, active && styles.iconButtonActive, disabled && styles.iconButtonDisabled]}
+      style={[styles.iconButton, disabled && styles.iconButtonDisabled]}
     >
-      {children}
+      <View style={styles.iconButtonClip}>
+        {active ? <ShinyGoldBackground borderRadius={18} /> : <ShinySilverBackground borderRadius={18} />}
+        {children}
+      </View>
     </TouchableOpacity>
   );
 }
@@ -252,24 +266,24 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     minWidth: 64,
+    borderRadius: 18,
+    ...agedGoldShadow,
+  },
+  iconButtonClip: {
     paddingVertical: 14,
     paddingHorizontal: 16,
-    borderRadius: 10,
-    backgroundColor: '#eef1f8',
+    borderRadius: 18,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    ...raisedShadow,
-  },
-  iconButtonActive: {
-    backgroundColor: MEDIUM_GRAY,
   },
   iconButtonDisabled: {
     opacity: 0.4,
   },
   previewText: {
-    fontSize: 18,
-    fontWeight: 'normal',
-    letterSpacing: 3,
+    fontSize: 20,
+    fontFamily: FONT_BUTTON,
+    letterSpacing: 1,
     textAlign: 'center',
   },
   repetitionRow: {
@@ -289,16 +303,20 @@ const styles = StyleSheet.create({
   stepButton: {
     width: 58,
     height: 58,
-    borderRadius: 10,
-    backgroundColor: MEDIUM_GRAY,
+    borderRadius: 18,
+    ...agedGoldShadow,
+  },
+  stepButtonClip: {
+    flex: 1,
+    borderRadius: 18,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    ...raisedShadow,
   },
   stepButtonText: {
     color: '#fff',
     fontSize: 28,
-    fontWeight: 'normal',
+    fontFamily: FONT_BUTTON,
   },
   stepValue: {
     fontSize: 20,
@@ -310,5 +328,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#888',
     textAlign: 'center',
+  },
+  environmentInfo: {
+    marginTop: 24,
+    fontSize: 11,
+    color: '#888',
+    textAlign: 'center',
+    lineHeight: 16,
   },
 });

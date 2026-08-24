@@ -40,6 +40,10 @@ export interface CurrentGame {
   guesses: GuessEntry[];
   startedAt: number;
   finishedAt?: number;
+  // Whether the win celebration animation has already played for this finish. Prevents
+  // it from replaying every time the screen remounts (tab switch, app restart) after
+  // the game was already won.
+  celebrated?: boolean;
 }
 
 export interface HistoryEntry {

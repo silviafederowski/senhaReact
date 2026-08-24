@@ -77,40 +77,32 @@ export function ResultTable({ rows, guesses, pinnedA, pinnedB, onTogglePin }: Re
                 </View>
               ))}
             </View>
-            {guesses.length === 0 ? (
-              <View style={styles.row}>
-                <View style={[styles.cell, styles.emptyCell]}>
-                  <Text style={styles.emptyText}>Nenhuma tentativa ainda.</Text>
-                </View>
-              </View>
-            ) : (
-              guesses.map((entry, index) => {
-                const result = entry.result;
-                const numbers = isDoubleResult(result)
-                  ? [
-                      result.pairsCorrectPos,
-                      result.pairsInvertedPos,
-                      result.pairsCorrectWrongPos,
-                      result.pairsInvertedWrongPos,
-                      result.charsCorrectPos,
-                      result.charsCorrectWrongPos,
-                    ]
-                  : [result.correctPosition, result.correctWrongPosition];
+            {guesses.map((entry, index) => {
+              const result = entry.result;
+              const numbers = isDoubleResult(result)
+                ? [
+                    result.pairsCorrectPos,
+                    result.pairsInvertedPos,
+                    result.pairsCorrectWrongPos,
+                    result.pairsInvertedWrongPos,
+                    result.charsCorrectPos,
+                    result.charsCorrectWrongPos,
+                  ]
+                : [result.correctPosition, result.correctWrongPosition];
 
-                return (
-                  <View key={index} style={styles.row}>
-                    <View style={[styles.cell, styles.firstCell]}>
-                      <GuessCell entry={entry} rows={rows} pinnedA={pinnedA} pinnedB={pinnedB} onTogglePin={onTogglePin} />
-                    </View>
-                    {numbers.map((v, i) => (
-                      <View key={i} style={[styles.cell, styles.valueCell]}>
-                        <Text style={styles.valueText}>{v}</Text>
-                      </View>
-                    ))}
+              return (
+                <View key={index} style={styles.row}>
+                  <View style={[styles.cell, styles.firstCell]}>
+                    <GuessCell entry={entry} rows={rows} pinnedA={pinnedA} pinnedB={pinnedB} onTogglePin={onTogglePin} />
                   </View>
-                );
-              })
-            )}
+                  {numbers.map((v, i) => (
+                    <View key={i} style={[styles.cell, styles.valueCell]}>
+                      <Text style={styles.valueText}>{v}</Text>
+                    </View>
+                  ))}
+                </View>
+              );
+            })}
           </View>
         </ScrollView>
       </View>
@@ -175,12 +167,5 @@ const styles = StyleSheet.create({
   },
   valueText: {
     fontSize: 14,
-  },
-  emptyCell: {
-    width: 260,
-  },
-  emptyText: {
-    color: '#888',
-    fontStyle: 'italic',
   },
 });

@@ -1,7 +1,9 @@
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { icon3D, raisedShadow } from '../styles/shadows';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ShinyGoldBackground } from './ShinyGoldBackground';
+import { GOLD } from '../styles/colors';
+import { FONT_BUTTON } from '../styles/fonts';
+import { agedGoldShadow, raisedShadow } from '../styles/shadows';
 
 interface GuessKeypadProps {
   alphabet: string[];
@@ -36,7 +38,10 @@ export function GuessKeypad({
               onPress={() => onPressChar(char)}
               style={[styles.key, disabled && styles.keyDisabled]}
             >
-              <Text style={[styles.keyText, disabled && styles.keyTextDisabled]}>{char}</Text>
+              <View style={styles.keyClip}>
+                {!disabled && <ShinyGoldBackground borderRadius={12} />}
+                <Text style={[styles.keyText, disabled && styles.keyTextDisabled]}>{char}</Text>
+              </View>
             </TouchableOpacity>
           );
         })}
@@ -48,7 +53,13 @@ export function GuessKeypad({
           accessibilityLabel="Limpar tudo"
           style={styles.actionButton}
         >
-          <MaterialCommunityIcons name="eraser" size={34} color={canClear ? '#000' : '#ccc'} style={canClear && icon3D} />
+          <View style={raisedShadow}>
+            <Image
+              source={require('../../assets/eraser.png')}
+              style={[styles.actionImage, { opacity: canClear ? 1 : 0.35 }]}
+              resizeMode="contain"
+            />
+          </View>
         </TouchableOpacity>
         <TouchableOpacity
           disabled={!canSubmit}
@@ -56,7 +67,13 @@ export function GuessKeypad({
           accessibilityLabel="Enviar tentativa"
           style={styles.actionButton}
         >
-          <Ionicons name="checkmark" size={38} color={canSubmit ? '#000' : '#ccc'} style={canSubmit && icon3D} />
+          <View style={raisedShadow}>
+            <Image
+              source={require('../../assets/ok.png')}
+              style={[styles.actionImage, { opacity: canSubmit ? 1 : 0.35 }]}
+              resizeMode="contain"
+            />
+          </View>
         </TouchableOpacity>
       </View>
     </View>
@@ -76,18 +93,24 @@ const styles = StyleSheet.create({
     minWidth: 36,
     height: 36,
     paddingHorizontal: 6,
-    borderRadius: 6,
-    backgroundColor: '#707070',
+    borderRadius: 12,
+    backgroundColor: GOLD,
+    ...agedGoldShadow,
+  },
+  keyClip: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    ...raisedShadow,
   },
   keyDisabled: {
     backgroundColor: '#ccc',
   },
   keyText: {
-    color: '#fff',
-    fontWeight: '700',
+    color: '#5c3a06',
+    fontFamily: FONT_BUTTON,
+    fontSize: 16,
   },
   keyTextDisabled: {
     color: '#888',
@@ -103,5 +126,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  actionImage: {
+    width: 48,
+    height: 48,
   },
 });

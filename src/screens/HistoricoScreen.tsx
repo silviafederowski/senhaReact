@@ -1,9 +1,7 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { HistoryTable } from '../components/HistoryTable';
 import { useGame } from '../context/GameContext';
-import { icon3D } from '../styles/shadows';
 
 export function HistoricoScreen() {
   const { loading, history, clearHistory } = useGame();
@@ -32,7 +30,7 @@ export function HistoricoScreen() {
         pinchGestureEnabled
       >
         <TouchableOpacity style={styles.clearButton} onPress={onClear} accessibilityLabel="Limpar histórico">
-          <MaterialCommunityIcons name="eraser" size={26} color="#c0392b" style={icon3D} />
+          <Image source={require('../../assets/eraser.png')} style={styles.clearImage} resizeMode="contain" />
         </TouchableOpacity>
         <HistoryTable history={history} />
       </ScrollView>
@@ -55,5 +53,9 @@ const styles = StyleSheet.create({
   clearButton: {
     alignSelf: 'flex-start',
     marginBottom: 14,
+  },
+  clearImage: {
+    width: 34,
+    height: 34,
   },
 });

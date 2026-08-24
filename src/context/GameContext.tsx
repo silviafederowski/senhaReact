@@ -25,6 +25,7 @@ interface GameContextValue {
   resetGame: () => void;
   updateConfig: (config: GameConfig) => void;
   clearHistory: () => void;
+  markCelebrated: () => void;
 }
 
 const GameContext = createContext<GameContextValue | undefined>(undefined);
@@ -126,6 +127,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setHistory([]);
   };
 
+  const markCelebrated = () => {
+    if (!currentGame || currentGame.celebrated) return;
+    const updatedGame: CurrentGame = { ...currentGame, celebrated: true };
+    setCurrentGame(updatedGame);
+    saveCurrentGame(updatedGame);
+  };
+
   const value = useMemo<GameContextValue>(
     () => ({
       loading,
@@ -137,6 +145,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       resetGame,
       updateConfig,
       clearHistory,
+      markCelebrated,
     }),
     [loading, config, currentGame, history, sessionStartedAt]
   );

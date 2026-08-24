@@ -1,6 +1,7 @@
 import React from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ArrowPairIcon, Dot, DotPairIcon, GREEN, YELLOW } from '../components/ResultIcons';
+import { FONT_TITLE } from '../styles/fonts';
 
 interface LegendEntry {
   icon: React.ReactNode;
@@ -10,32 +11,32 @@ interface LegendEntry {
 
 const ENTRIES: LegendEntry[] = [
   {
-    icon: <DotPairIcon color={GREEN} />,
+    icon: <DotPairIcon color={GREEN} size={15} />,
     description: 'Par de caracteres certo, na posição correta.',
     scope: 'Linha dupla',
   },
   {
-    icon: <ArrowPairIcon color={GREEN} />,
+    icon: <ArrowPairIcon color={GREEN} size={20} />,
     description: 'Par de caracteres invertido (posições trocadas), na posição correta.',
     scope: 'Linha dupla',
   },
   {
-    icon: <DotPairIcon color={YELLOW} />,
+    icon: <DotPairIcon color={YELLOW} size={15} />,
     description: 'Par de caracteres certo, mas em outra posição.',
     scope: 'Linha dupla',
   },
   {
-    icon: <ArrowPairIcon color={YELLOW} />,
+    icon: <ArrowPairIcon color={YELLOW} size={20} />,
     description: 'Par de caracteres invertido, em outra posição.',
     scope: 'Linha dupla',
   },
   {
-    icon: <Dot color={GREEN} />,
+    icon: <Dot color={GREEN} size={15} />,
     description: 'Caractere certo, na posição correta.',
     scope: 'Linha única e linha dupla',
   },
   {
-    icon: <Dot color={YELLOW} />,
+    icon: <Dot color={YELLOW} size={15} />,
     description: 'Caractere certo, mas em outra posição.',
     scope: 'Linha única e linha dupla',
   },
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
     borderColor: '#eee',
   },
   iconBox: {
-    width: 48,
+    width: 56,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -107,10 +108,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   tipTitle: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 20,
+    fontFamily: FONT_TITLE,
     marginTop: 20,
     marginBottom: 6,
+    textAlign: 'center',
   },
   tipText: {
     fontSize: 13,
