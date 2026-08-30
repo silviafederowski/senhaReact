@@ -39,3 +39,9 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Play Console credentials & build output
+google-play-service-account.json
+credentials.json
+*.aab
+secrets/

@@ -37,5 +37,6 @@ const styles = StyleSheet.create({
   charText: {
     fontWeight: '800',
     textAlign: 'center',
+    color: '#fff',
   },
 });

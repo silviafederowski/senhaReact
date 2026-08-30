@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderColor: '#eee',
+    borderColor: 'rgba(255,255,255,0.15)',
   },
   iconBox: {
     width: 56,
@@ -101,10 +101,11 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 14,
     fontWeight: '600',
+    color: '#fff',
   },
   scope: {
     fontSize: 12,
-    color: '#888',
+    color: 'rgba(255,255,255,0.6)',
     marginTop: 2,
   },
   tipTitle: {
@@ -113,10 +114,11 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 6,
     textAlign: 'center',
+    color: '#fff',
   },
   tipText: {
     fontSize: 13,
-    color: '#444',
+    color: 'rgba(255,255,255,0.75)',
     lineHeight: 19,
   },
 });

@@ -96,7 +96,7 @@ export function CelebratingSecretReveal({ secret, rows, size = 30, fontSize = 20
     return () => clearTimeout(timer);
   }, []);
 
-  const pulseColor = pulseProgress.interpolate({ inputRange: [0, 1], outputRange: ['#000000', '#1f8a3b'] });
+  const pulseColor = pulseProgress.interpolate({ inputRange: [0, 1], outputRange: ['#ffffff', '#1f8a3b'] });
 
   return (
     <Animated.View style={{ transform: [{ scale: pulseScale }] }}>
@@ -146,5 +146,6 @@ const styles = StyleSheet.create({
   },
   text: {
     fontWeight: '800',
+    color: '#fff',
   },
 });

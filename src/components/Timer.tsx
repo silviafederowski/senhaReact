@@ -33,11 +33,12 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 10,
-    color: '#666',
+    color: 'rgba(255,255,255,0.6)',
   },
   value: {
     fontSize: 13,
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
+    color: '#fff',
   },
 });

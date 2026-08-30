@@ -17,6 +17,7 @@ const transparentTheme = {
   colors: {
     ...DefaultTheme.colors,
     background: 'transparent',
+    text: '#fff',
   },
 };
 

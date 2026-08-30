@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { getAlphabet } from '../game/alphabet';
 import { CelebratingSecretReveal, totalCelebrationDuration } from '../components/CelebratingSecretReveal';
 import { CharGrid } from '../components/CharGrid';
@@ -121,12 +121,7 @@ export function TabuleiroScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        minimumZoomScale={1}
-        maximumZoomScale={2.5}
-        pinchGestureEnabled
-      >
+      <View style={styles.content}>
         {!finished && (
           <SecretDisplay
             secret={currentGame.secret}
@@ -181,18 +176,20 @@ export function TabuleiroScreen() {
           </View>
         )}
 
-        <ResultTable
-          rows={config.rows}
-          guesses={currentGame.guesses}
-          pinnedA={pinnedA}
-          pinnedB={pinnedB}
-          onTogglePin={onTogglePin}
-        />
-      </ScrollView>
+        <View style={styles.tableArea}>
+          <ResultTable
+            rows={config.rows}
+            guesses={currentGame.guesses}
+            pinnedA={pinnedA}
+            pinnedB={pinnedB}
+            onTogglePin={onTogglePin}
+          />
+        </View>
+      </View>
 
       {celebrating && (
         <>
-          <BlurView intensity={50} tint="light" style={StyleSheet.absoluteFill} />
+          <BlurView intensity={50} tint="dark" style={StyleSheet.absoluteFill} />
           <View style={styles.celebrationOverlay} pointerEvents="none">
             <CelebratingSecretReveal
               key={currentGame.finishedAt}
@@ -215,11 +212,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   content: {
+    flex: 1,
     padding: 16,
+  },
+  tableArea: {
+    flex: 1,
+    minHeight: 0,
   },
   loadingText: {
     textAlign: 'center',
     marginTop: 40,
+    color: '#fff',
   },
   timers: {
     flexDirection: 'row',
@@ -241,7 +244,7 @@ const styles = StyleSheet.create({
   },
   hint: {
     fontSize: 12,
-    color: '#3a6b46',
+    color: '#fff',
     textAlign: 'center',
     marginTop: 16,
   },

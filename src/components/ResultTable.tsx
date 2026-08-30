@@ -68,42 +68,51 @@ export function ResultTable({ rows, guesses, pinnedA, pinnedB, onTogglePin }: Re
   return (
     <View style={styles.tableShadowWrapper}>
       <View style={styles.tableClip}>
-        <ScrollView horizontal contentContainerStyle={styles.scrollContent}>
-          <View>
-            <View style={styles.row}>
-              {headers.map((h, i) => (
-                <View key={i} style={[styles.cell, i === 0 ? styles.firstCell : styles.valueCell, styles.headerCell]}>
-                  {typeof h === 'string' ? <Text style={styles.headerText}>{h}</Text> : h}
-                </View>
-              ))}
-            </View>
-            {guesses.map((entry, index) => {
-              const result = entry.result;
-              const numbers = isDoubleResult(result)
-                ? [
-                    result.pairsCorrectPos,
-                    result.pairsInvertedPos,
-                    result.pairsCorrectWrongPos,
-                    result.pairsInvertedWrongPos,
-                    result.charsCorrectPos,
-                    result.charsCorrectWrongPos,
-                  ]
-                : [result.correctPosition, result.correctWrongPosition];
-
-              return (
-                <View key={index} style={styles.row}>
-                  <View style={[styles.cell, styles.firstCell]}>
-                    <GuessCell entry={entry} rows={rows} pinnedA={pinnedA} pinnedB={pinnedB} onTogglePin={onTogglePin} />
+        <ScrollView
+          horizontal
+          style={styles.horizontalScroll}
+          contentContainerStyle={styles.scrollContent}
+          minimumZoomScale={1}
+          maximumZoomScale={2.5}
+          pinchGestureEnabled
+        >
+          <ScrollView>
+            <View>
+              <View style={styles.row}>
+                {headers.map((h, i) => (
+                  <View key={i} style={[styles.cell, i === 0 ? styles.firstCell : styles.valueCell, styles.headerCell]}>
+                    {typeof h === 'string' ? <Text style={styles.headerText}>{h}</Text> : h}
                   </View>
-                  {numbers.map((v, i) => (
-                    <View key={i} style={[styles.cell, styles.valueCell]}>
-                      <Text style={styles.valueText}>{v}</Text>
+                ))}
+              </View>
+              {guesses.map((entry, index) => {
+                const result = entry.result;
+                const numbers = isDoubleResult(result)
+                  ? [
+                      result.pairsCorrectPos,
+                      result.pairsInvertedPos,
+                      result.pairsCorrectWrongPos,
+                      result.pairsInvertedWrongPos,
+                      result.charsCorrectPos,
+                      result.charsCorrectWrongPos,
+                    ]
+                  : [result.correctPosition, result.correctWrongPosition];
+
+                return (
+                  <View key={index} style={styles.row}>
+                    <View style={[styles.cell, styles.firstCell]}>
+                      <GuessCell entry={entry} rows={rows} pinnedA={pinnedA} pinnedB={pinnedB} onTogglePin={onTogglePin} />
                     </View>
-                  ))}
-                </View>
-              );
-            })}
-          </View>
+                    {numbers.map((v, i) => (
+                      <View key={i} style={[styles.cell, styles.valueCell]}>
+                        <Text style={styles.valueText}>{v}</Text>
+                      </View>
+                    ))}
+                  </View>
+                );
+              })}
+            </View>
+          </ScrollView>
         </ScrollView>
       </View>
     </View>
@@ -112,12 +121,22 @@ export function ResultTable({ rows, guesses, pinnedA, pinnedB, onTogglePin }: Re
 
 const styles = StyleSheet.create({
   tableShadowWrapper: {
+    flex: 1,
     borderRadius: 18,
+    borderWidth: 2,
+    borderTopColor: 'rgba(255,255,255,0.35)',
+    borderLeftColor: 'rgba(255,255,255,0.25)',
+    borderRightColor: 'rgba(0,0,0,0.5)',
+    borderBottomColor: 'rgba(0,0,0,0.5)',
     ...raisedShadow,
   },
   tableClip: {
-    borderRadius: 18,
+    flex: 1,
+    borderRadius: 16,
     overflow: 'hidden',
+  },
+  horizontalScroll: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
@@ -142,7 +161,7 @@ const styles = StyleSheet.create({
     width: 38,
   },
   headerCell: {
-    backgroundColor: '#b9d18c',
+    backgroundColor: '#e5e5e5',
   },
   headerText: {
     fontSize: 11,

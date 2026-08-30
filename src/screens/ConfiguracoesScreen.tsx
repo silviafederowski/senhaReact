@@ -251,6 +251,7 @@ const styles = StyleSheet.create({
   loadingText: {
     textAlign: 'center',
     marginTop: 40,
+    color: '#fff',
   },
   optionGroup: {
     paddingBottom: 20,
@@ -323,16 +324,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     minWidth: 30,
     textAlign: 'center',
+    color: '#fff',
   },
   hint: {
     fontSize: 12,
-    color: '#888',
+    color: 'rgba(255,255,255,0.6)',
     textAlign: 'center',
   },
   environmentInfo: {
     marginTop: 24,
     fontSize: 11,
-    color: '#888',
+    color: 'rgba(255,255,255,0.6)',
     textAlign: 'center',
     lineHeight: 16,
   },

@@ -49,6 +49,7 @@ const styles = StyleSheet.create({
   loadingText: {
     textAlign: 'center',
     marginTop: 40,
+    color: '#fff',
   },
   clearButton: {
     alignSelf: 'flex-start',
