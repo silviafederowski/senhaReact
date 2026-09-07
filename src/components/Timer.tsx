@@ -6,9 +6,10 @@ interface TimerProps {
   label: string;
   startedAt: number;
   endedAt?: number;
+  scale?: number;
 }
 
-export function Timer({ label, startedAt, endedAt }: TimerProps) {
+export function Timer({ label, startedAt, endedAt, scale = 1 }: TimerProps) {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -21,8 +22,8 @@ export function Timer({ label, startedAt, endedAt }: TimerProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{formatDuration(elapsed)}</Text>
+      <Text style={[styles.label, { fontSize: Math.round(10 * scale) }]}>{label}</Text>
+      <Text style={[styles.value, { fontSize: Math.round(13 * scale) }]}>{formatDuration(elapsed)}</Text>
     </View>
   );
 }
@@ -32,11 +33,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   label: {
-    fontSize: 10,
     color: 'rgba(255,255,255,0.6)',
   },
   value: {
-    fontSize: 13,
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
     color: '#fff',

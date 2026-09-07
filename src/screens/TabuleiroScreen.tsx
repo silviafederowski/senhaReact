@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { getAlphabet } from '../game/alphabet';
 import { CelebratingSecretReveal, totalCelebrationDuration } from '../components/CelebratingSecretReveal';
 import { CharGrid } from '../components/CharGrid';
@@ -19,8 +19,17 @@ function draftFromPins(length: number, pins: (string | null)[]): string[] {
   return Array.from({ length }, (_, i) => pins[i] ?? '');
 }
 
+// Reference window height the layout above the attempts table (secret display, timers,
+// guess slots + keypad) was designed at. On shorter Android screens, everything there
+// shrinks proportionally so it still fits without needing its own scroll -- only the
+// attempts table (which has its own internal scroll) is allowed to grow past that space.
+const BASELINE_HEIGHT = 780;
+const MIN_SCALE = 0.75;
+
 export function TabuleiroScreen() {
   const { loading, currentGame, sessionStartedAt, submitGuess, markCelebrated } = useGame();
+  const { height: windowHeight } = useWindowDimensions();
+  const scale = Math.min(1, Math.max(MIN_SCALE, windowHeight / BASELINE_HEIGHT));
   const [draftA, setDraftA] = useState<string[]>([]);
   const [draftB, setDraftB] = useState<string[]>([]);
   const [pinnedA, setPinnedA] = useState<(string | null)[]>([]);
@@ -121,39 +130,47 @@ export function TabuleiroScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.content}>
+      <View style={[styles.content, { padding: Math.round(16 * scale) }]}>
         {!finished && (
           <SecretDisplay
             secret={currentGame.secret}
             rows={config.rows}
             visible={secretVisible}
             onToggle={() => setSecretVisible((v) => !v)}
+            scale={scale}
           />
         )}
 
         {finished && !celebrating && (
-          <View style={styles.settledSecret}>
+          <View style={[styles.settledSecret, { marginBottom: Math.round(8 * scale) }]}>
             <CharGrid
               lines={config.rows === 2 ? [currentGame.secret.rowA, currentGame.secret.rowB ?? []] : [currentGame.secret.rowA]}
-              fontSize={20}
-              cellWidth={28}
+              fontSize={Math.round(20 * scale)}
+              cellWidth={Math.round(28 * scale)}
+              gap={Math.round(6 * scale)}
             />
             <Text style={styles.hint}>Toque em Resetar, na barra inferior, para jogar de novo.</Text>
           </View>
         )}
 
-        <View style={styles.timers}>
-          <Timer label="Tempo desta senha" startedAt={currentGame.startedAt} endedAt={currentGame.finishedAt} />
-          <Timer label="Tempo deste acesso" startedAt={sessionStartedAt} />
+        <View style={[styles.timers, { marginBottom: Math.round(12 * scale) }]}>
+          <Timer
+            label="Tempo desta senha"
+            startedAt={currentGame.startedAt}
+            endedAt={currentGame.finishedAt}
+            scale={scale}
+          />
+          <Timer label="Tempo deste acesso" startedAt={sessionStartedAt} scale={scale} />
         </View>
 
         {!finished && (
-          <View style={styles.entry}>
+          <View style={[styles.entry, { marginBottom: Math.round(16 * scale) }]}>
             <GuessSlots
               length={config.length}
               values={draftA}
               selectedIndex={selectedRow === 'A' ? selectedLocal : null}
               onSlotPress={(i) => setSelected(i)}
+              scale={scale}
             />
             {config.rows === 2 && (
               <GuessSlots
@@ -161,6 +178,7 @@ export function TabuleiroScreen() {
                 values={draftB}
                 selectedIndex={selectedRow === 'B' ? selectedLocal : null}
                 onSlotPress={(i) => setSelected(config.length + i)}
+                scale={scale}
               />
             )}
             <GuessKeypad
@@ -172,6 +190,7 @@ export function TabuleiroScreen() {
               onPressChar={onPressChar}
               onClearAll={onClearAll}
               onSubmit={onSubmit}
+              scale={scale}
             />
           </View>
         )}

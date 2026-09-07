@@ -6,18 +6,27 @@ interface GuessSlotsProps {
   values: string[];
   selectedIndex: number | null;
   onSlotPress: (index: number) => void;
+  scale?: number;
 }
 
-export function GuessSlots({ length, values, selectedIndex, onSlotPress }: GuessSlotsProps) {
+export function GuessSlots({ length, values, selectedIndex, onSlotPress, scale = 1 }: GuessSlotsProps) {
+  const slotSize = Math.round(36 * scale);
+  const gap = Math.round(6 * scale);
+  const fontSize = Math.round(16 * scale);
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { gap }]}>
       {Array.from({ length }).map((_, i) => (
         <TouchableOpacity
           key={i}
-          style={[styles.slot, i === selectedIndex && styles.slotSelected]}
+          style={[
+            styles.slot,
+            { width: slotSize, height: slotSize },
+            i === selectedIndex && styles.slotSelected,
+          ]}
           onPress={() => onSlotPress(i)}
         >
-          <Text style={styles.slotText}>{values[i] || ''}</Text>
+          <Text style={[styles.slotText, { fontSize }]}>{values[i] || ''}</Text>
         </TouchableOpacity>
       ))}
     </View>
@@ -28,12 +37,9 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 6,
     marginVertical: 4,
   },
   slot: {
-    width: 36,
-    height: 36,
     borderWidth: 1,
     borderColor: '#999',
     borderRadius: 6,
@@ -47,7 +53,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#eef1f8',
   },
   slotText: {
-    fontSize: 16,
     fontWeight: '700',
   },
 });
