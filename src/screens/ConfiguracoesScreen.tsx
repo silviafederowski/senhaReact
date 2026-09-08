@@ -10,7 +10,7 @@ import { useGame } from '../context/GameContext';
 import { FONT_BUTTON } from '../styles/fonts';
 import { agedGoldShadow } from '../styles/shadows';
 import { Charset, GameConfig, RowsMode } from '../types/game';
-import { describeEnvironment } from '../utils/environment';
+import { describeEnvironment, describeVersion } from '../utils/environment';
 
 const MIN_LENGTH = 3;
 const HARD_MAX_LENGTH = 10;
@@ -207,6 +207,7 @@ export function ConfiguracoesScreen() {
         )}
 
         <Text style={styles.environmentInfo}>{describeEnvironment()}</Text>
+        <Text style={styles.versionInfo}>{describeVersion()}</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -337,5 +338,11 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
     textAlign: 'center',
     lineHeight: 16,
+  },
+  versionInfo: {
+    marginTop: 8,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.4)',
+    textAlign: 'center',
   },
 });

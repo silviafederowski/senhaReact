@@ -16,3 +16,14 @@ export function describeEnvironment(): string {
   if (sdkVersion) lines.push(`SDK do Expo: ${sdkVersion}`);
   return lines.join('\n');
 }
+
+// Update this alongside every version/versionCode bump -- there's no automatic build
+// timestamp available from Expo at runtime, so it has to be maintained by hand.
+const VERSION_DATE = '08/09/2026';
+
+export function describeVersion(): string {
+  const version = Constants.expoConfig?.version ?? '?';
+  const versionCode = Constants.expoConfig?.android?.versionCode;
+  const build = versionCode ? ` (build ${versionCode})` : '';
+  return `Versão ${version}${build} · ${VERSION_DATE}`;
+}
