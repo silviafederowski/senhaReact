@@ -16,7 +16,7 @@
     },
     "android": {
       "package": "com.senha.meuapp",
-      "versionCode": 5,
+      "versionCode": 6,
       "adaptiveIcon": {
         "backgroundColor": "#d9e8c0",
         "foregroundImage": "./assets/icon.png",
