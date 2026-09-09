@@ -76,43 +76,45 @@ export function ResultTable({ rows, guesses, pinnedA, pinnedB, onTogglePin }: Re
           maximumZoomScale={2.5}
           pinchGestureEnabled
         >
-          <ScrollView>
-            <View>
-              <View style={styles.row}>
-                {headers.map((h, i) => (
-                  <View key={i} style={[styles.cell, i === 0 ? styles.firstCell : styles.valueCell, styles.headerCell]}>
-                    {typeof h === 'string' ? <Text style={styles.headerText}>{h}</Text> : h}
-                  </View>
-                ))}
-              </View>
-              {guesses.map((entry, index) => {
-                const result = entry.result;
-                const numbers = isDoubleResult(result)
-                  ? [
-                      result.pairsCorrectPos,
-                      result.pairsInvertedPos,
-                      result.pairsCorrectWrongPos,
-                      result.pairsInvertedWrongPos,
-                      result.charsCorrectPos,
-                      result.charsCorrectWrongPos,
-                    ]
-                  : [result.correctPosition, result.correctWrongPosition];
-
-                return (
-                  <View key={index} style={styles.row}>
-                    <View style={[styles.cell, styles.firstCell]}>
-                      <GuessCell entry={entry} rows={rows} pinnedA={pinnedA} pinnedB={pinnedB} onTogglePin={onTogglePin} />
-                    </View>
-                    {numbers.map((v, i) => (
-                      <View key={i} style={[styles.cell, styles.valueCell]}>
-                        <Text style={styles.valueText}>{v}</Text>
-                      </View>
-                    ))}
-                  </View>
-                );
-              })}
+          <View style={styles.column}>
+            <View style={styles.row}>
+              {headers.map((h, i) => (
+                <View key={i} style={[styles.cell, i === 0 ? styles.firstCell : styles.valueCell, styles.headerCell]}>
+                  {typeof h === 'string' ? <Text style={styles.headerText}>{h}</Text> : h}
+                </View>
+              ))}
             </View>
-          </ScrollView>
+            <ScrollView style={styles.bodyScroll}>
+              <View>
+                {guesses.map((entry, index) => {
+                  const result = entry.result;
+                  const numbers = isDoubleResult(result)
+                    ? [
+                        result.pairsCorrectPos,
+                        result.pairsInvertedPos,
+                        result.pairsCorrectWrongPos,
+                        result.pairsInvertedWrongPos,
+                        result.charsCorrectPos,
+                        result.charsCorrectWrongPos,
+                      ]
+                    : [result.correctPosition, result.correctWrongPosition];
+
+                  return (
+                    <View key={index} style={styles.row}>
+                      <View style={[styles.cell, styles.firstCell]}>
+                        <GuessCell entry={entry} rows={rows} pinnedA={pinnedA} pinnedB={pinnedB} onTogglePin={onTogglePin} />
+                      </View>
+                      {numbers.map((v, i) => (
+                        <View key={i} style={[styles.cell, styles.valueCell]}>
+                          <Text style={styles.valueText}>{v}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          </View>
         </ScrollView>
       </View>
     </View>
@@ -141,6 +143,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
+  },
+  column: {
+    alignSelf: 'stretch',
+  },
+  bodyScroll: {
+    flex: 1,
   },
   row: {
     flexDirection: 'row',
