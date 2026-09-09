@@ -17,9 +17,14 @@ const HARD_MAX_LENGTH = 10;
 const ACTIVE_COLOR = '#5c3a06';
 const INACTIVE_COLOR = '#000';
 
-function maxLengthFor(charset: Charset, allowRepetition: boolean): number {
+// Without repetition, a double-row secret still can't repeat a character between rowA
+// and rowB -- the two rows share one pool of unique characters, so the ceiling is half
+// the alphabet size instead of the whole thing.
+function maxLengthFor(charset: Charset, allowRepetition: boolean, rows: RowsMode): number {
   if (allowRepetition) return HARD_MAX_LENGTH;
-  return Math.min(HARD_MAX_LENGTH, getAlphabet(charset).length);
+  const alphabetSize = getAlphabet(charset).length;
+  const base = rows === 2 ? Math.floor(alphabetSize / 2) : alphabetSize;
+  return Math.min(HARD_MAX_LENGTH, base);
 }
 
 function PreviewText({
@@ -76,7 +81,7 @@ export function ConfiguracoesScreen() {
     );
   }
 
-  const repetitionForced = maxLengthFor(draft.charset, false) < draft.length;
+  const repetitionForced = maxLengthFor(draft.charset, false, draft.rows) < draft.length;
 
   // Any change here is applied immediately and restarts the current game with the new rules.
   const applyChange = (updater: (d: GameConfig) => GameConfig) => {
@@ -87,12 +92,23 @@ export function ConfiguracoesScreen() {
     });
   };
 
-  const setRows = (rows: RowsMode) => applyChange((d) => ({ ...d, rows }));
+  const setRows = (rows: RowsMode) => {
+    applyChange((d) => {
+      const forced = maxLengthFor(d.charset, false, rows) < d.length;
+      const newMax = maxLengthFor(d.charset, forced ? true : d.allowRepetition, rows);
+      return {
+        ...d,
+        rows,
+        allowRepetition: forced ? true : d.allowRepetition,
+        length: Math.min(d.length, newMax),
+      };
+    });
+  };
 
   const setCharset = (charset: Charset) => {
     applyChange((d) => {
-      const forced = maxLengthFor(charset, false) < d.length;
-      const newMax = maxLengthFor(charset, forced ? true : d.allowRepetition);
+      const forced = maxLengthFor(charset, false, d.rows) < d.length;
+      const newMax = maxLengthFor(charset, forced ? true : d.allowRepetition, d.rows);
       return {
         ...d,
         charset,
@@ -104,7 +120,7 @@ export function ConfiguracoesScreen() {
 
   const changeLength = (delta: number) => {
     applyChange((d) => {
-      const newMax = maxLengthFor(d.charset, d.allowRepetition);
+      const newMax = maxLengthFor(d.charset, d.allowRepetition, d.rows);
       const next = Math.min(newMax, Math.max(MIN_LENGTH, d.length + delta));
       return { ...d, length: next };
     });
@@ -112,7 +128,7 @@ export function ConfiguracoesScreen() {
 
   const setAllowRepetition = (allowRepetition: boolean) => {
     applyChange((d) => {
-      const newMax = maxLengthFor(d.charset, allowRepetition);
+      const newMax = maxLengthFor(d.charset, allowRepetition, d.rows);
       return { ...d, allowRepetition, length: Math.min(d.length, newMax) };
     });
   };
