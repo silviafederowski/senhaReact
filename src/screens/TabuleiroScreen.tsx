@@ -34,6 +34,7 @@ export function TabuleiroScreen() {
   const [draftB, setDraftB] = useState<string[]>([]);
   const [pinnedA, setPinnedA] = useState<(string | null)[]>([]);
   const [pinnedB, setPinnedB] = useState<(string | null)[]>([]);
+  const [excludedChars, setExcludedChars] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState(0);
   const [secretVisible, setSecretVisible] = useState(false);
 
@@ -44,6 +45,7 @@ export function TabuleiroScreen() {
     setPinnedB(emptyArray(length, null));
     setDraftA(emptyArray(length, ''));
     setDraftB(emptyArray(length, ''));
+    setExcludedChars(new Set());
     setSelected(0);
     setSecretVisible(false);
   }, [currentGame?.startedAt]);
@@ -107,25 +109,39 @@ export function TabuleiroScreen() {
     setSelected(0);
   };
 
-  // Tapping a character in the attempts history marks it green (a personal "confirmed"
-  // hint) and offers it at that same position/row in the next attempt. Tapping a green
-  // one again clears the pin. Each character (row A or row B) toggles independently.
-  const onTogglePin = (row: 'A' | 'B', position: number, char: string) => {
+  // Tapping a character in the attempts history cycles it through three states:
+  // original -> green (a personal "confirmed" pin, offered at that same position/row in
+  // the next attempt) -> red (the character itself, regardless of position, is excluded
+  // -- blocked and blinking on the keypad) -> back to original.
+  const onCharPress = (row: 'A' | 'B', position: number, char: string) => {
     const pins = row === 'A' ? pinnedA : pinnedB;
-    const setPins = row === 'A' ? setPinnedA : setPinnedB;
-    const setDraft = row === 'A' ? setDraftA : setDraftB;
+    const isPinnedHere = pins[position] === char;
+    const isExcluded = excludedChars.has(char);
 
-    const alreadyGreen = pins[position] === char;
-    const next = alreadyGreen ? null : char;
+    if (!isPinnedHere && !isExcluded) {
+      const setPins = row === 'A' ? setPinnedA : setPinnedB;
+      const setDraft = row === 'A' ? setDraftA : setDraftB;
+      setPins((prev) => prev.map((c, i) => (i === position ? char : c)));
+      setDraft((prev) => prev.map((c, i) => (i === position ? char : c)));
+      return;
+    }
 
-    setPins((prev) => prev.map((c, i) => (i === position ? next : c)));
-    setDraft((prev) =>
-      prev.map((c, i) => {
-        if (i !== position) return c;
-        if (next !== null) return next;
-        return c === char ? '' : c;
-      })
-    );
+    if (isPinnedHere) {
+      // Excluding the character clears every pin/draft slot offering it too -- it can't
+      // be simultaneously "confirmed" and "excluded".
+      setPinnedA((prev) => prev.map((c) => (c === char ? null : c)));
+      setPinnedB((prev) => prev.map((c) => (c === char ? null : c)));
+      setDraftA((prev) => prev.map((c) => (c === char ? '' : c)));
+      setDraftB((prev) => prev.map((c) => (c === char ? '' : c)));
+      setExcludedChars((prev) => new Set(prev).add(char));
+      return;
+    }
+
+    setExcludedChars((prev) => {
+      const next = new Set(prev);
+      next.delete(char);
+      return next;
+    });
   };
 
   return (
@@ -184,6 +200,7 @@ export function TabuleiroScreen() {
             <GuessKeypad
               alphabet={alphabet}
               disabledChars={disabledChars}
+              excludedChars={excludedChars}
               canType={canType}
               canClear={canClear}
               canSubmit={canSubmit}
@@ -201,7 +218,8 @@ export function TabuleiroScreen() {
             guesses={currentGame.guesses}
             pinnedA={pinnedA}
             pinnedB={pinnedB}
-            onTogglePin={onTogglePin}
+            excludedChars={excludedChars}
+            onCharPress={onCharPress}
           />
         </View>
       </View>

@@ -1,7 +1,12 @@
 import React from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { ArrowPairIcon, Dot, DotPairIcon, GREEN, YELLOW } from '../components/ResultIcons';
 import { FONT_TITLE } from '../styles/fonts';
+
+// Reference window height this screen's content was designed at. On shorter screens
+// everything shrinks proportionally so the whole legend fits without scrolling.
+const BASELINE_HEIGHT = 780;
+const MIN_SCALE = 0.7;
 
 interface LegendEntry {
   icon: React.ReactNode;
@@ -43,29 +48,35 @@ const ENTRIES: LegendEntry[] = [
 ];
 
 export function LegendaScreen() {
+  const { height: windowHeight } = useWindowDimensions();
+  const scale = Math.min(1, Math.max(MIN_SCALE, windowHeight / BASELINE_HEIGHT));
+
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { padding: Math.round(16 * scale) }]}
         minimumZoomScale={1}
         maximumZoomScale={2.5}
         pinchGestureEnabled
       >
         {ENTRIES.map((entry, i) => (
-          <View key={i} style={styles.row}>
+          <View key={i} style={[styles.row, { paddingVertical: Math.round(12 * scale) }]}>
             <View style={styles.iconBox}>{entry.icon}</View>
             <View style={styles.textBox}>
-              <Text style={styles.description}>{entry.description}</Text>
-              <Text style={styles.scope}>{entry.scope}</Text>
+              <Text style={[styles.description, { fontSize: Math.round(14 * scale) }]}>{entry.description}</Text>
+              <Text style={[styles.scope, { fontSize: Math.round(12 * scale) }]}>{entry.scope}</Text>
             </View>
           </View>
         ))}
 
-        <Text style={styles.tipTitle}>Fixar um caractere</Text>
-        <Text style={styles.tipText}>
-          Para fixar ou desafixar um caractere, basta clicar sobre ele na lista de
-          tentativas. Enquanto estiver verde, ele será oferecido automaticamente na
-          mesma posição nas próximas tentativas.
+        <Text style={[styles.tipTitle, { fontSize: Math.round(20 * scale), marginTop: Math.round(20 * scale) }]}>
+          Marcar um caractere
+        </Text>
+        <Text style={[styles.tipText, { fontSize: Math.round(13 * scale), lineHeight: Math.round(19 * scale) }]}>
+          Toque em um caractere na lista de tentativas para alternar entre três estados:
+          verde (confirmado — será oferecido automaticamente na mesma posição nas
+          próximas tentativas), vermelho (excluído — fica bloqueado no teclado, piscando
+          se você tentar usá-lo) e de volta à cor original.
         </Text>
       </ScrollView>
     </SafeAreaView>

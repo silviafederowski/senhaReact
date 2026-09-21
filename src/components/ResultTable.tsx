@@ -9,7 +9,8 @@ interface ResultTableProps {
   guesses: GuessEntry[];
   pinnedA: (string | null)[];
   pinnedB: (string | null)[];
-  onTogglePin: (row: 'A' | 'B', position: number, char: string) => void;
+  excludedChars: Set<string>;
+  onCharPress: (row: 'A' | 'B', position: number, char: string) => void;
 }
 
 function GuessCell({
@@ -17,13 +18,15 @@ function GuessCell({
   rows,
   pinnedA,
   pinnedB,
-  onTogglePin,
+  excludedChars,
+  onCharPress,
 }: {
   entry: GuessEntry;
   rows: RowsMode;
   pinnedA: (string | null)[];
   pinnedB: (string | null)[];
-  onTogglePin: (row: 'A' | 'B', position: number, char: string) => void;
+  excludedChars: Set<string>;
+  onCharPress: (row: 'A' | 'B', position: number, char: string) => void;
 }) {
   const charsA = entry.guess.rowA;
   const charsB = entry.guess.rowB ?? [];
@@ -34,14 +37,20 @@ function GuessCell({
         const charB = rows === 2 ? charsB[i] : undefined;
         const greenA = pinnedA[i] === charA;
         const greenB = rows === 2 && pinnedB[i] === charB;
+        const excludedA = excludedChars.has(charA);
+        const excludedB = charB !== undefined && excludedChars.has(charB);
         return (
           <View key={i} style={styles.charCell}>
-            <TouchableOpacity onPress={() => onTogglePin('A', i, charA)}>
-              <Text style={[styles.guessText, greenA && styles.greenText]}>{charA}</Text>
+            <TouchableOpacity onPress={() => onCharPress('A', i, charA)}>
+              <Text style={[styles.guessText, greenA && styles.greenText, excludedA && styles.excludedText]}>
+                {charA}
+              </Text>
             </TouchableOpacity>
             {rows === 2 && charB !== undefined && (
-              <TouchableOpacity onPress={() => onTogglePin('B', i, charB)}>
-                <Text style={[styles.guessText, greenB && styles.greenText]}>{charB}</Text>
+              <TouchableOpacity onPress={() => onCharPress('B', i, charB)}>
+                <Text style={[styles.guessText, greenB && styles.greenText, excludedB && styles.excludedText]}>
+                  {charB}
+                </Text>
               </TouchableOpacity>
             )}
           </View>
@@ -62,7 +71,7 @@ const DOUBLE_HEADERS = [
   <Dot key="6" color={YELLOW} />,
 ];
 
-export function ResultTable({ rows, guesses, pinnedA, pinnedB, onTogglePin }: ResultTableProps) {
+export function ResultTable({ rows, guesses, pinnedA, pinnedB, excludedChars, onCharPress }: ResultTableProps) {
   const headers = rows === 1 ? SINGLE_HEADERS : DOUBLE_HEADERS;
 
   return (
@@ -102,7 +111,14 @@ export function ResultTable({ rows, guesses, pinnedA, pinnedB, onTogglePin }: Re
                   return (
                     <View key={index} style={styles.row}>
                       <View style={[styles.cell, styles.firstCell]}>
-                        <GuessCell entry={entry} rows={rows} pinnedA={pinnedA} pinnedB={pinnedB} onTogglePin={onTogglePin} />
+                        <GuessCell
+                          entry={entry}
+                          rows={rows}
+                          pinnedA={pinnedA}
+                          pinnedB={pinnedB}
+                          excludedChars={excludedChars}
+                          onCharPress={onCharPress}
+                        />
                       </View>
                       {numbers.map((v, i) => (
                         <View key={i} style={[styles.cell, styles.valueCell]}>
@@ -191,6 +207,10 @@ const styles = StyleSheet.create({
   },
   greenText: {
     color: GREEN,
+  },
+  excludedText: {
+    color: '#ff3b30',
+    textDecorationLine: 'line-through',
   },
   valueText: {
     fontSize: 14,
