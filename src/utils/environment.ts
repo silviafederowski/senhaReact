@@ -19,7 +19,7 @@ export function describeEnvironment(): string {
 
 // Update this alongside every version/versionCode bump -- there's no automatic build
 // timestamp available from Expo at runtime, so it has to be maintained by hand.
-const VERSION_DATE = '08/09/2026';
+const VERSION_DATE = '24/09/2026';
 
 export function describeVersion(): string {
   const version = Constants.expoConfig?.version ?? '?';
