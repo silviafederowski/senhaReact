@@ -73,10 +73,19 @@ export function LegendaScreen() {
           Marcar um caractere
         </Text>
         <Text style={[styles.tipText, { fontSize: Math.round(13 * scale), lineHeight: Math.round(19 * scale) }]}>
-          Toque em um caractere na lista de tentativas para alternar entre três estados:
-          verde (confirmado — será oferecido automaticamente na mesma posição nas
-          próximas tentativas), vermelho (excluído — fica bloqueado no teclado, piscando
-          se você tentar usá-lo) e de volta à cor original.
+          Toque em um caractere na lista de tentativas para alternar entre quatro
+          estados: verde (confirmado — será oferecido automaticamente na mesma posição
+          nas próximas tentativas), vermelho (excluído — fica bloqueado no teclado,
+          piscando se você tentar usá-lo), azul (apenas uma anotação sua, sem efeito no
+          jogo) e de volta à cor original.
+        </Text>
+
+        <Text style={[styles.tipTitle, { fontSize: Math.round(20 * scale), marginTop: Math.round(20 * scale) }]}>
+          Zoom na lista de tentativas
+        </Text>
+        <Text style={[styles.tipText, { fontSize: Math.round(13 * scale), lineHeight: Math.round(19 * scale) }]}>
+          Use os botões "−" e "+" no canto da lista de tentativas para diminuir ou
+          aumentar o tamanho do texto e das células.
         </Text>
       </ScrollView>
     </SafeAreaView>

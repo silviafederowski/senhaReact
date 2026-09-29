@@ -35,6 +35,7 @@ export function TabuleiroScreen() {
   const [pinnedA, setPinnedA] = useState<(string | null)[]>([]);
   const [pinnedB, setPinnedB] = useState<(string | null)[]>([]);
   const [excludedChars, setExcludedChars] = useState<Set<string>>(new Set());
+  const [notedChars, setNotedChars] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState(0);
   const [secretVisible, setSecretVisible] = useState(false);
 
@@ -46,6 +47,7 @@ export function TabuleiroScreen() {
     setDraftA(emptyArray(length, ''));
     setDraftB(emptyArray(length, ''));
     setExcludedChars(new Set());
+    setNotedChars(new Set());
     setSelected(0);
     setSecretVisible(false);
   }, [currentGame?.startedAt]);
@@ -109,16 +111,18 @@ export function TabuleiroScreen() {
     setSelected(0);
   };
 
-  // Tapping a character in the attempts history cycles it through three states:
+  // Tapping a character in the attempts history cycles it through four states:
   // original -> green (a personal "confirmed" pin, offered at that same position/row in
   // the next attempt) -> red (the character itself, regardless of position, is excluded
-  // -- blocked and blinking on the keypad) -> back to original.
+  // -- blocked and blinking on the keypad) -> blue (a purely informative note for the
+  // player, no effect on gameplay) -> back to original.
   const onCharPress = (row: 'A' | 'B', position: number, char: string) => {
     const pins = row === 'A' ? pinnedA : pinnedB;
     const isPinnedHere = pins[position] === char;
     const isExcluded = excludedChars.has(char);
+    const isNoted = notedChars.has(char);
 
-    if (!isPinnedHere && !isExcluded) {
+    if (!isPinnedHere && !isExcluded && !isNoted) {
       const setPins = row === 'A' ? setPinnedA : setPinnedB;
       const setDraft = row === 'A' ? setDraftA : setDraftB;
       setPins((prev) => prev.map((c, i) => (i === position ? char : c)));
@@ -137,7 +141,17 @@ export function TabuleiroScreen() {
       return;
     }
 
-    setExcludedChars((prev) => {
+    if (isExcluded) {
+      setExcludedChars((prev) => {
+        const next = new Set(prev);
+        next.delete(char);
+        return next;
+      });
+      setNotedChars((prev) => new Set(prev).add(char));
+      return;
+    }
+
+    setNotedChars((prev) => {
       const next = new Set(prev);
       next.delete(char);
       return next;
@@ -219,6 +233,7 @@ export function TabuleiroScreen() {
             pinnedA={pinnedA}
             pinnedB={pinnedB}
             excludedChars={excludedChars}
+            notedChars={notedChars}
             onCharPress={onCharPress}
           />
         </View>
